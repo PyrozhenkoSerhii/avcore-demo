@@ -1,0 +1,1 @@
+export const getExpiration = (): number => Math.floor(Date.now() / 1000 + 12*24 * 3600);
