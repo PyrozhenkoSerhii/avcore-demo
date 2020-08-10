@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "outDir": "./build/",
+    "module": "es6",
+    "target": "es5",
+    "jsx": "react",
+    "allowJs": true,
+    "noImplicitAny": true,
+    "removeComments": true,
+    "sourceMap": true,
+  },
+  "include": [
+    "./**/*.ts",
+    "./**/*.tsx",
+  ],
+  "exclude": [
+    "webpack.config.js"
+  ]
+}

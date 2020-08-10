@@ -1,0 +1,45 @@
+{
+  "extends": [
+    "airbnb",
+    "plugin:@typescript-eslint/recommended"
+  ],
+  "parser": "@typescript-eslint/parser",
+  "plugins": [
+    "@typescript-eslint",
+    "prettier"
+  ],
+  "settings": {
+    "import/parsers": {
+      "@typescript-eslint/parser": [".ts", ".tsx"]
+    },
+    "import/resolver": {
+      "typescript": {}
+    }
+  },
+  "env": {
+    "es6": true,
+    "browser": true
+  },
+  "rules": {
+    "import/extensions": "off",
+    "camelcase": "off",
+    "react/jsx-filename-extension": [
+      2,
+      {
+        "extensions": [
+          ".js",
+          ".jsx",
+          ".ts",
+          ".tsx"
+        ]
+      }
+    ],
+    "quotes": [
+      "error",
+      "double"
+    ],
+    "import/prefer-default-export": "off",
+    "react/jsx-props-no-spreading": "off",
+    "no-underscore-dangle": "off"
+  }
+}

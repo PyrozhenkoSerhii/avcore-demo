@@ -3,8 +3,7 @@
   "version": "1.0.0",
   "scripts": {
     "precommit": "eslint .",
-    "dev": "nodemon -r dotenv/config ./index.ts",
-    "build": "tsc --project ./server/"
+    "dev": "nodemon -r dotenv/config ./index.ts"
   },
   "dependencies": {
     "avcore": "git+ssh://git@github.com/anovikov1984/avcore.git",

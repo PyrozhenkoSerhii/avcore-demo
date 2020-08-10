@@ -11,9 +11,7 @@ const app = express();
 const PORT = process.env.PORT;
 const SECRET = process.env.SECRET;
 
-app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "../client/index.html"));
-});
+app.use(express.static(path.join(__dirname, "../client/dist")));
 
 const httpServer = createServer(app);
 httpServer.listen(PORT, () => {
