@@ -1,8 +1,7 @@
-/* eslint-disable @typescript-eslint/no-var-requires */
-import {createServer} from "http";
 import path from "path";
 import express from "express";
 import jwt from "jsonwebtoken";
+import socketIO from "socket.io";
 
 import {getExpiration} from "./utils/token";
 
@@ -13,12 +12,11 @@ const SECRET = process.env.SECRET;
 
 app.use(express.static(path.join(__dirname, "../client/dist")));
 
-const httpServer = createServer(app);
-httpServer.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   console.log(`Server is listening on port ${PORT}`);
 });
 
-const io = require("socket.io")(httpServer);
+const io = socketIO(server);
 
 io.on("connection", (socket) => {
   console.log("a user connected");

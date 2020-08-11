@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
 const webpack = require("webpack");
+const Dotenv = require("dotenv-webpack");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const { CleanWebpackPlugin } = require("clean-webpack-plugin");
 
@@ -31,6 +32,7 @@ module.exports = {
     port: 4000,
   },
   plugins: [
+    new Dotenv(),
     new HtmlWebpackPlugin({
       template: "./index.html",
     }),
