@@ -4,6 +4,7 @@ import jwt from "jsonwebtoken";
 import socketIO from "socket.io";
 
 import {getExpiration} from "./utils/token";
+import {ISocketAuth} from "./interfaces/socket";
 
 const app = express();
 
@@ -19,10 +20,9 @@ const server = app.listen(PORT, () => {
 const io = socketIO(server);
 
 io.on("connection", (socket) => {
-  console.log("a user connected");
+  console.log("Socket connection was established");
   socket.on("auth", ({stream, operation}, callback) => {
     const token = jwt.sign({stream, operation}, SECRET, {expiresIn: getExpiration(), algorithm: "HS512"});     
-    console.log("token created"); 
     callback({token});
   });
 });
