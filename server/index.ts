@@ -4,17 +4,17 @@ import jwt from "jsonwebtoken";
 import socketIO from "socket.io";
 
 import {getExpiration} from "./utils/token";
-import {ISocketAuth} from "./interfaces/socket";
 
 const app = express();
 
-const PORT = process.env.PORT;
+const PORT = Number(process.env.PORT);
+const HOST = process.env.HOST;
 const SECRET = process.env.SECRET;
 
 app.use(express.static(path.join(__dirname, "../client/dist")));
 
-const server = app.listen(PORT, () => {
-  console.log(`Server is listening on port ${PORT}`);
+const server = app.listen(PORT, HOST, () => {
+  console.log(`Server is listening on ${HOST}:${PORT}`);
 });
 
 const io = socketIO(server);

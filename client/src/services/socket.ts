@@ -1,19 +1,16 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
+// @ts-ignore
+import { Utils, ConferenceApi } from "avcore/client/dist";
 import { createContext } from "react";
 import { observable, action } from "mobx";
 import * as io from "socket.io-client";
-
-// TODO: types definitions for avcore/client/dist
-// @ts-ignore
-import { Utils, ConferenceApi } from "avcore/client/dist";
+import * as shortId from "shortid";
 import { API_OPERATION } from "avcore";
 
 import { conferenceConfig } from "../config/stream";
 
 class SocketService {
   @observable socket: SocketIOClient.Socket = null;
-
-  @observable token: string = null;
 
   @observable streamId: string = null;
 
@@ -24,7 +21,7 @@ class SocketService {
   @observable error: string = null;
 
   constructor() {
-    this.socket = io(`http://localhost:${process.env.PORT}`);
+    this.socket = io(`${process.env.PROTOCOL}://${process.env.HOST}:${process.env.PORT}`);
   }
 
   async init() {
@@ -35,15 +32,10 @@ class SocketService {
     }
   }
 
-  @action auth = (path: string) => {
-    this.socket.emit("auth", { stream: path, operation: API_OPERATION.PUBLISH }, async ({ token }: {token: string}) => {
-      this.token = token;
-      this.streamId = path;
-    });
-  }
-
-  @action publishStream = async (streamId: string) => {
+  @action publishStream = async () => {
     if (this.mediaStream) {
+      const streamId = shortId.generate();
+
       this.socket.emit("auth", { stream: streamId, operation: API_OPERATION.PUBLISH }, async ({ token }: {token: string}) => {
         const capture = new ConferenceApi({
           ...conferenceConfig,
@@ -51,16 +43,17 @@ class SocketService {
           token,
         });
 
+        this.streamId = streamId;
         await capture.publish(this.mediaStream);
       });
     }
   }
 
-  @action listenStream = async (streamId: string) => {
-    this.socket.emit("auth", { stream: streamId, operation: API_OPERATION.SUBSCRIBE }, async ({ token }: {token: string}) => {
+  @action listenStream = async () => {
+    this.socket.emit("auth", { stream: this.streamId, operation: API_OPERATION.SUBSCRIBE }, async ({ token }: {token: string}) => {
       const playback = new ConferenceApi({
         ...conferenceConfig,
-        stream: streamId,
+        stream: this.streamId,
         token,
       });
 
@@ -69,4 +62,6 @@ class SocketService {
   }
 }
 
-export const socketService = createContext(new SocketService());
+const service = new SocketService();
+service.init();
+export const socketService = createContext(service);
