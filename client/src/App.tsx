@@ -1,12 +1,24 @@
 import * as React from "react";
-import * as io from "socket.io-client";
+import { observer } from "mobx-react";
+import { useLocation } from "react-router-dom";
 
-export const App = ():JSX.Element => {
-  io(`http://localhost:${process.env.PORT}`);
+import { socketService } from "./services/socket";
+import { AlertComponent } from "./components/Alert";
+
+const { useContext, useEffect } = React;
+
+export const App = observer(():JSX.Element => {
+  const socketStore = useContext(socketService);
+  const location = useLocation();
+
+  useEffect(() => {
+    socketStore.init();
+    socketStore.auth(location.pathname);
+  }, []);
 
   return (
-    <div>
+    <AlertComponent message={socketStore.error} type="error">
       Avcore Demo
-    </div>
+    </AlertComponent>
   );
-};
+});

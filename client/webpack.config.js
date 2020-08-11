@@ -32,7 +32,9 @@ module.exports = {
     port: 4000,
   },
   plugins: [
-    new Dotenv(),
+    new Dotenv({
+      path: "../server/.env",
+    }),
     new HtmlWebpackPlugin({
       template: "./index.html",
     }),
