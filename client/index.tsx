@@ -8,7 +8,7 @@ import { App } from "./src/App";
 const GlobalStyle = createGlobalStyle`
   html, body, #app {
     margin: 0;
-    min-height: 100vh;
+    min-height: 100%;
   }
   * {
     box-sizing: border-box;

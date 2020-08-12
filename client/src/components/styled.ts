@@ -2,10 +2,11 @@ import styled from "styled-components";
 
 export const AppWrapper = styled.div`
   width: 100%;
-  height: 100vh;
+  height: 100%;
   background: #191B1C;
   display: flex;
   flex-direction: column;
+  padding-bottom: 40px;
 `;
 
 export const Header = styled.div`
@@ -51,6 +52,6 @@ export const ColumnController = styled.div`
 export const Video = styled.video`
   width: 640px;
   height: 480px;
-  border: 1px solid dashed;
+  border: 1px solid #262A2B;
   margin-top: 10px;
 `;

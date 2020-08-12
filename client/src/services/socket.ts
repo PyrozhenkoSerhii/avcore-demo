@@ -5,9 +5,9 @@ import { createContext } from "react";
 import { observable, action } from "mobx";
 import * as io from "socket.io-client";
 import * as shortId from "shortid";
-import { API_OPERATION } from "avcore";
+import { API_OPERATION, MediasoupSocketApi, MIXER_PIPE_TYPE } from "avcore";
 
-import { conferenceConfig } from "../config/stream";
+import { conferenceConfig, mixerPipeFormats, mixerOptions } from "../config/stream";
 
 class SocketService {
   @observable socket: SocketIOClient.Socket = null;
@@ -17,6 +17,8 @@ class SocketService {
   @observable mediaStream: MediaStream = null;
 
   @observable incommingStream: MediaStream = null;
+
+  @observable hlsUrl: string = null;
 
   @observable error: string = null;
 
@@ -36,7 +38,7 @@ class SocketService {
     if (this.mediaStream) {
       const streamId = shortId.generate();
 
-      this.socket.emit("auth", { stream: streamId, operation: API_OPERATION.PUBLISH }, async ({ token }: {token: string}) => {
+      this.socket.emit("auth", { stream: streamId, operation: API_OPERATION.PUBLISH }, async (token: string) => {
         const capture = new ConferenceApi({
           ...conferenceConfig,
           stream: streamId,
@@ -50,7 +52,7 @@ class SocketService {
   }
 
   @action listenStream = async () => {
-    this.socket.emit("auth", { stream: this.streamId, operation: API_OPERATION.SUBSCRIBE }, async ({ token }: {token: string}) => {
+    this.socket.emit("auth", { stream: this.streamId, operation: API_OPERATION.SUBSCRIBE }, async (token: string) => {
       const playback = new ConferenceApi({
         ...conferenceConfig,
         stream: this.streamId,
@@ -58,6 +60,48 @@ class SocketService {
       });
 
       this.incommingStream = await playback.subscribe();
+    });
+  }
+
+  @action mixerStart = async () => {
+    this.socket.emit("auth", { stream: this.streamId, operation: API_OPERATION.MIXER }, async (token: string) => {
+      try {
+        const api = new MediasoupSocketApi(conferenceConfig.url, conferenceConfig.worker, token);
+        const { mixerId } = await api.mixerStart({});
+
+        this.socket.emit("save_mixer", {
+          streamId: this.streamId,
+          mixerId,
+          serverUrl: conferenceConfig.url,
+        });
+
+        const videoMixer = api.mixerAdd({
+          mixerId,
+          kind: "video",
+          stream: this.streamId,
+          options: mixerOptions,
+        });
+
+        const audioMixer = api.mixerAdd({
+          mixerId,
+          kind: "audio",
+          stream: this.streamId,
+        });
+
+        await videoMixer;
+        await audioMixer;
+
+        const { pipeId } = await api.mixerPipeStart({
+          mixerId,
+          kinds: ["audio", "video"],
+          type: MIXER_PIPE_TYPE.HLS,
+          formats: mixerPipeFormats,
+        });
+
+        this.hlsUrl = `${conferenceConfig.url}/hls/${pipeId}/master.m3u8`;
+      } catch (err) {
+        this.error = err;
+      }
     });
   }
 }

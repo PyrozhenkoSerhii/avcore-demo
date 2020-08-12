@@ -6,32 +6,17 @@ import { CloudDownload, CloudUpload } from "@material-ui/icons";
 
 import { socketService } from "./services/socket";
 import { AlertComponent } from "./components/Alert";
+import { HLSPlayerComponent } from "./components/HLSPlayer";
+import { PlayerComponent } from "./components/Player";
 
 import {
-  AppWrapper, Header, Content, ContentColumn, ColumnInfo, ColumnController, Video,
+  AppWrapper, Header, Content, ContentColumn, ColumnInfo, ColumnController,
 } from "./components/styled";
 
-const { useContext, useEffect, useRef } = React;
+const { useContext } = React;
 
 export const App = observer(():JSX.Element => {
   const socketStore = useContext(socketService);
-
-  const selfVideoPlayer = useRef<HTMLVideoElement>(null);
-  const incommingVideoPlayer = useRef<HTMLVideoElement>(null);
-
-  useEffect(() => {
-    if (incommingVideoPlayer.current && socketStore.incommingStream) {
-      incommingVideoPlayer.current.srcObject = socketStore.incommingStream;
-      incommingVideoPlayer.current.play();
-    }
-  }, [socketStore.incommingStream]);
-
-  useEffect(() => {
-    if (selfVideoPlayer.current && socketStore.mediaStream) {
-      selfVideoPlayer.current.srcObject = socketStore.mediaStream;
-      selfVideoPlayer.current.play();
-    }
-  }, [socketStore.mediaStream]);
 
   return (
     <AlertComponent message={socketStore.error} type="error">
@@ -58,7 +43,7 @@ export const App = observer(():JSX.Element => {
               </Button>
             </ColumnController>
 
-            <Video ref={selfVideoPlayer} />
+            <PlayerComponent source={socketStore.mediaStream} />
           </ContentColumn>
 
           <ContentColumn>
@@ -79,7 +64,24 @@ export const App = observer(():JSX.Element => {
               </Button>
             </ColumnController>
 
-            <Video ref={incommingVideoPlayer} />
+            <PlayerComponent source={socketStore.incommingStream} />
+
+            <ColumnInfo>
+              <Typography variant="h6">HLS stream</Typography>
+            </ColumnInfo>
+
+            <ColumnController>
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={socketStore.mixerStart}
+              >
+                Start mixers
+              </Button>
+            </ColumnController>
+
+            <HLSPlayerComponent url={socketStore.hlsUrl} />
+
           </ContentColumn>
         </Content>
 
