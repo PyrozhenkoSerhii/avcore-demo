@@ -1,11 +1,13 @@
 import * as React from "react";
 import * as Hls from "hls.js";
+import { CircularProgress } from "@material-ui/core";
 
 import { Video } from "../styled";
+import { Loader, WithLoaderWrapper } from "./styled";
 
 const { ErrorTypes } = Hls;
 const {
-  useRef, useEffect, useMemo,
+  useRef, useEffect, useMemo, useState,
 } = React;
 
 type TProps = {
@@ -15,6 +17,8 @@ type TProps = {
 export const HLSPlayerComponent = ({ url }: TProps): JSX.Element => {
   const videoRef = useRef<HTMLVideoElement>(null);
 
+  const [loading, setLoading] = useState(true);
+
   const hls = useMemo(() => new Hls(), []);
 
   useEffect(() => {
@@ -23,6 +27,7 @@ export const HLSPlayerComponent = ({ url }: TProps): JSX.Element => {
       hls.attachMedia(videoRef.current);
 
       hls.on(Hls.Events.MANIFEST_PARSED, () => {
+        setLoading(false);
         videoRef.current.play();
       });
 
@@ -38,6 +43,13 @@ export const HLSPlayerComponent = ({ url }: TProps): JSX.Element => {
   }, [hls, url]);
 
   return (
-    <Video ref={videoRef} />
+    <WithLoaderWrapper>
+      {loading && url && (
+        <Loader>
+          <CircularProgress />
+        </Loader>
+      )}
+      <Video ref={videoRef} />
+    </WithLoaderWrapper>
   );
 };

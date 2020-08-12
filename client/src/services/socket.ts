@@ -22,6 +22,12 @@ class SocketService {
 
   @observable error: string = null;
 
+  @observable conferenceConfig = conferenceConfig;
+
+  @observable capture = null;
+
+  @observable playback = null;
+
   constructor() {
     this.socket = io(`${process.env.PROTOCOL}://${process.env.HOST}:${process.env.PORT}`);
   }
@@ -34,45 +40,74 @@ class SocketService {
     }
   }
 
+  @action changeServer = (serverUrl: string) => {
+    this.conferenceConfig = {
+      ...this.conferenceConfig,
+      url: `https://${serverUrl}`,
+    };
+  }
+
   @action publishStream = async () => {
     if (this.mediaStream) {
       const streamId = shortId.generate();
 
       this.socket.emit("auth", { stream: streamId, operation: API_OPERATION.PUBLISH }, async (token: string) => {
         const capture = new ConferenceApi({
-          ...conferenceConfig,
+          ...this.conferenceConfig,
           stream: streamId,
           token,
         });
 
-        this.streamId = streamId;
         await capture.publish(this.mediaStream);
+        this.streamId = streamId;
+        this.capture = capture;
       });
+    }
+  }
+
+  @action stopPublishing = async () => {
+    this.capture.close();
+    this.streamId = null;
+    this.mediaStream = await Utils.getUserMedia({ video: true, audio: true });
+
+    if (this.playback) {
+      this.playback.close();
+      this.incommingStream = null;
     }
   }
 
   @action listenStream = async () => {
     this.socket.emit("auth", { stream: this.streamId, operation: API_OPERATION.SUBSCRIBE }, async (token: string) => {
       const playback = new ConferenceApi({
-        ...conferenceConfig,
+        ...this.conferenceConfig,
         stream: this.streamId,
         token,
       });
 
       this.incommingStream = await playback.subscribe();
+      this.playback = playback;
     });
+  }
+
+  @action stopListening = async () => {
+    this.playback.close();
+    this.incommingStream = null;
   }
 
   @action mixerStart = async () => {
     this.socket.emit("auth", { stream: this.streamId, operation: API_OPERATION.MIXER }, async (token: string) => {
       try {
-        const api = new MediasoupSocketApi(conferenceConfig.url, conferenceConfig.worker, token);
+        const api = new MediasoupSocketApi(
+          this.conferenceConfig.url,
+          this.conferenceConfig.worker,
+          token,
+        );
         const { mixerId } = await api.mixerStart({});
 
         this.socket.emit("save_mixer", {
           streamId: this.streamId,
           mixerId,
-          serverUrl: conferenceConfig.url,
+          serverUrl: this.conferenceConfig.url,
         });
 
         const videoMixer = api.mixerAdd({
@@ -98,7 +133,7 @@ class SocketService {
           formats: mixerPipeFormats,
         });
 
-        this.hlsUrl = `${conferenceConfig.url}/hls/${pipeId}/master.m3u8`;
+        this.hlsUrl = `${this.conferenceConfig.url}/hls/${pipeId}/master.m3u8`;
       } catch (err) {
         this.error = err;
       }

@@ -39,10 +39,12 @@ export const ContentColumn = styled.div`
 export const ColumnInfo = styled.div`
   width: 100%;
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   justify-content: center;
+  align-items: center;
   color: #dbdee4;
   padding: 15px;
+  min-height: 100px;
 `;
 
 export const ColumnController = styled.div`
