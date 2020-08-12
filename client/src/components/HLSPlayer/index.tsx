@@ -3,7 +3,10 @@ import * as Hls from "hls.js";
 
 import { Video } from "../styled";
 
-const { useRef, useEffect } = React;
+const { ErrorTypes } = Hls;
+const {
+  useRef, useEffect, useMemo,
+} = React;
 
 type TProps = {
   url: string;
@@ -12,18 +15,27 @@ type TProps = {
 export const HLSPlayerComponent = ({ url }: TProps): JSX.Element => {
   const videoRef = useRef<HTMLVideoElement>(null);
 
+  const hls = useMemo(() => new Hls(), []);
+
   useEffect(() => {
-    if (url && videoRef.current) {
-      console.log("hls url: ", url);
-      const hls = new Hls();
+    if (hls && url && videoRef.current) {
       hls.loadSource(url);
-      // hls.loadSource("https://bitdash-a.akamaihd.net/content/sintel/hls/playlist.m3u8");
       hls.attachMedia(videoRef.current);
+
       hls.on(Hls.Events.MANIFEST_PARSED, () => {
         videoRef.current.play();
       });
+
+      hls.on(Hls.Events.ERROR, (event, data) => {
+        if (data.type === ErrorTypes.NETWORK_ERROR) {
+          setTimeout(() => {
+            hls.loadSource(url);
+            hls.startLoad();
+          }, 1000);
+        }
+      });
     }
-  }, [url]);
+  }, [hls, url]);
 
   return (
     <Video ref={videoRef} />

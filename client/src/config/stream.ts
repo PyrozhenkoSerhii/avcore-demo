@@ -8,14 +8,14 @@ export const conferenceConfig = {
 
 export const mixerPipeFormats: MixerHlsFormatOptions[] = [
   { videoBitrate: 4000 },
-  { videoBitrate: 1000, height: 360 },
+  { videoBitrate: 1000, height: 480, width: 640 },
 ];
 
 export const mixerOptions: MixerOptions = {
   x: 0,
   y: 0,
   width: 640,
-  height: 720,
+  height: 480,
   z: 0,
   renderType: MIXER_RENDER_TYPE.CROP,
 };
