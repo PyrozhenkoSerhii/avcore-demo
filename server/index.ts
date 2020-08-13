@@ -18,9 +18,9 @@ const app = express();
 const PORT = Number(process.env.PORT);
 const SECRET = process.env.SECRET;
 
-const privateKey = fs.readFileSync("/etc/letsencrypt/live/app.example.com/privkey.pem", "utf8");
-const certificate = fs.readFileSync("/etc/letsencrypt/live/app.example.com/cert.pem", "utf8");
-const ca = fs.readFileSync("/etc/letsencrypt/live/app.example.com/chain.pem", "utf8");
+const privateKey = fs.readFileSync("/etc/letsencrypt/live/app.avcore.io/privkey.pem", "utf8");
+const certificate = fs.readFileSync("/etc/letsencrypt/live/app.avcore.io/cert.pem", "utf8");
+const ca = fs.readFileSync("/etc/letsencrypt/live/app.avcore.io/chain.pem", "utf8");
 
 const credentials = {
   key: privateKey,
