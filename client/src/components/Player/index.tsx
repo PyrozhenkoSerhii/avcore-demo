@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import * as React from "react";
 import { Utils } from "avcore/client/dist";
 import { Video } from "../styled";
@@ -7,7 +8,7 @@ const { useRef, useEffect } = React;
 type TProps = {
   source: MediaStream;
   self?: boolean;
-  playback: any;
+  playback?: any;
 }
 
 export const PlayerComponent = ({ source, self, playback }: TProps): JSX.Element => {
@@ -16,7 +17,8 @@ export const PlayerComponent = ({ source, self, playback }: TProps): JSX.Element
   useEffect(() => {
     if (player.current && source) {
       player.current.srcObject = source;
-      if (Utils.isSafari) {
+
+      if (!self && playback && Utils.isSafari) {
         const onStreamChange = () => {
           player.current.srcObject = new MediaStream(source.getTracks());
           player.current.play();
@@ -24,9 +26,10 @@ export const PlayerComponent = ({ source, self, playback }: TProps): JSX.Element
 
         playback.on("addtrack", onStreamChange).on("removetrack", onStreamChange);
       }
+
       player.current.play();
     }
-  }, [source]);
+  }, [source, playback]);
 
   return (
     <Video ref={player} muted controls={!self && !!source} />

@@ -58,7 +58,6 @@ export const App = observer(():JSX.Element => {
 
             <PlayerComponent
               source={socketStore.mediaStream}
-              playback={socketStore.capture}
               self
             />
           </ContentColumn>

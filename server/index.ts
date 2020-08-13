@@ -2,6 +2,7 @@ import dotenv from "dotenv";
 dotenv.config();
 
 import config from "config";
+import cors from "cors";
 import {createServer} from "https";
 import fs from "fs";
 import path from "path";
@@ -11,10 +12,8 @@ import socketIO from "socket.io";
 import { MediasoupSocketApi, API_OPERATION } from "avcore";
 
 import { getExpiration } from "./utils/token";
-
 import { IExtSocket, TOnAuthProps, TOnSaveMixerProps, TOnAuthCallback } from "./interfaces/socket";
 
-const app = express();
 
 const PORT = Number(process.env.PORT);
 const SECRET = process.env.SECRET;
@@ -29,6 +28,8 @@ const credentials = {
   ca: ca
 };
 
+const app = express();
+app.use(cors());
 app.use(express.static(path.join(__dirname, "../client/dist")));
 
 app.get("/", (req, res) => {
