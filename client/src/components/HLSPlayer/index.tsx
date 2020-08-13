@@ -19,7 +19,7 @@ export const HLSPlayerComponent = ({ url }: TProps): JSX.Element => {
 
   const [loading, setLoading] = useState(true);
 
-  const hls = useMemo(() => new Hls(), []);
+  const hls = useMemo(() => new Hls({ capLevelToPlayerSize: true }), []);
 
   useEffect(() => {
     if (hls && url && videoRef.current) {

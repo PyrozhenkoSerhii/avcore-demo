@@ -5,6 +5,7 @@ import { createContext } from "react";
 import { observable, action } from "mobx";
 import * as io from "socket.io-client";
 import * as shortId from "shortid";
+import axios from "axios";
 import { API_OPERATION, MediasoupSocketApi, MIXER_PIPE_TYPE } from "avcore";
 
 import { conferenceConfig, mixerPipeFormats, mixerOptions } from "../config/stream";
@@ -19,6 +20,8 @@ class SocketService {
   @observable incommingStream: MediaStream = null;
 
   @observable hlsUrl: string = null;
+
+  @observable hlsAvailable = false;
 
   @observable error: string = null;
 
@@ -94,6 +97,23 @@ class SocketService {
     this.incommingStream = null;
   }
 
+  @action checkUrl = async (url: string) => {
+    try {
+      await axios.get(url);
+      this.hlsAvailable = true;
+    } catch (err) {
+      if (err.response.status === 404) {
+        // eslint-disable-next-line no-console
+        console.log("Hls video not available. Retring in 1 second");
+        setTimeout(() => {
+          this.checkUrl(url);
+        }, 1000);
+      } else {
+        throw new Error(err);
+      }
+    }
+  }
+
   @action mixerStart = async () => {
     this.socket.emit("auth", { stream: this.streamId, operation: API_OPERATION.MIXER }, async (token: string) => {
       try {
@@ -102,7 +122,10 @@ class SocketService {
           this.conferenceConfig.worker,
           token,
         );
-        const { mixerId } = await api.mixerStart({});
+        const { mixerId } = await api.mixerStart({
+          height: mixerOptions.height,
+          width: mixerOptions.width,
+        });
 
         this.socket.emit("save_mixer", {
           streamId: this.streamId,
@@ -133,7 +156,10 @@ class SocketService {
           formats: mixerPipeFormats,
         });
 
-        this.hlsUrl = `${this.conferenceConfig.url}/hls/${pipeId}/master.m3u8`;
+        const url = `${this.conferenceConfig.url}/hls/${pipeId}/master.m3u8`;
+        await this.checkUrl(url);
+
+        this.hlsUrl = url;
       } catch (err) {
         this.error = err;
       }
