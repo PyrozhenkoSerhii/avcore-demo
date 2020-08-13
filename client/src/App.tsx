@@ -11,7 +11,7 @@ import { HLSPlayerVideoJSComponent } from "./components/HLSPlayerVideoJS";
 import { PlayerComponent } from "./components/Player";
 
 import {
-  AppWrapper, Header, Content, ContentColumn, ColumnInfo, ColumnController,
+  AppWrapper, Header, Content, ContentColumn, ColumnInfo, ColumnController, InfoHeader, InfoContent,
 } from "./components/styled";
 
 const { useContext, useEffect } = React;
@@ -39,7 +39,7 @@ export const App = observer(():JSX.Element => {
         <Content>
           <ContentColumn>
             <ColumnInfo>
-              <Typography variant="h6">Publish your stream to the AVCore server</Typography>
+              <InfoHeader>Publish your stream to the AVCore server</InfoHeader>
             </ColumnInfo>
 
             <ColumnController>
@@ -56,13 +56,19 @@ export const App = observer(():JSX.Element => {
               </Button>
             </ColumnController>
 
-            <PlayerComponent source={socketStore.mediaStream} self />
+            <PlayerComponent
+              source={socketStore.mediaStream}
+              playback={socketStore.capture}
+              self
+            />
           </ContentColumn>
 
           <ContentColumn>
             <ColumnInfo>
-              <Typography variant="h6">Subscribe to the stream you&apos;ve just published via WebRTC</Typography>
-              <Typography variant="body2">You will be able to subscribe as soon as you publish your stream</Typography>
+              <InfoHeader>Subscribe to the stream you&apos;ve just published via WebRTC</InfoHeader>
+              <InfoContent>
+                You will be able to subscribe as soon as you publish your stream
+              </InfoContent>
             </ColumnInfo>
 
             <ColumnController>
@@ -80,11 +86,16 @@ export const App = observer(():JSX.Element => {
               </Button>
             </ColumnController>
 
-            <PlayerComponent source={socketStore.incommingStream} />
+            <PlayerComponent
+              source={socketStore.incommingStream}
+              playback={socketStore.playback}
+            />
 
             <ColumnInfo>
-              <Typography variant="h6">Subscribe to the stream you&apos;ve just published via HLS</Typography>
-              <Typography variant="body2">You will be able to subscribe as soon as you publish your stream</Typography>
+              <InfoHeader>Subscribe to the stream you&apos;ve just published via HLS</InfoHeader>
+              <InfoContent>
+                You will be able to subscribe as soon as you publish your stream
+              </InfoContent>
             </ColumnInfo>
 
             <ColumnController>

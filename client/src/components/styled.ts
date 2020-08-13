@@ -68,3 +68,45 @@ export const Video = styled.video<TVideoElementProps>`
   height: 480px;
   margin-top: 10px;
 `;
+
+const Text = styled.p`
+  font-family: Roboto;
+  margin: 0;
+  text-align: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 10px 5px;
+`;
+
+export const InfoHeader = styled(Text)`
+  font-size: 1.3vw;
+
+  @media (max-width: 1650px){
+    font-size: 1.5vw;
+  }
+
+  @media (max-width: 1240px) {
+    font-size: 22px;
+  }
+
+  @media (max-width: 480px) {
+    font-size: 20px;
+  }
+`;
+
+export const InfoContent = styled(Text)`
+  font-size: 1vw;
+
+  @media (max-width: 1650px){
+    font-size: 1.3vw;
+  }
+
+  @media (max-width: 1240px) {
+    font-size: 20px;
+  }
+
+  @media (max-width: 480px) {
+    font-size: 18px;
+  }
+`;
