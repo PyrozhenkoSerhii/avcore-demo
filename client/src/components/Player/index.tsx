@@ -6,9 +6,10 @@ const { useRef, useEffect } = React;
 
 type TProps = {
   source: MediaStream;
+  self?: boolean;
 }
 
-export const PlayerComponent = ({ source }: TProps): JSX.Element => {
+export const PlayerComponent = ({ source, self }: TProps): JSX.Element => {
   const player = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
@@ -19,6 +20,6 @@ export const PlayerComponent = ({ source }: TProps): JSX.Element => {
   }, [source]);
 
   return (
-    <Video ref={player} />
+    <Video ref={player} muted controls={!self && !!source} />
   );
 };

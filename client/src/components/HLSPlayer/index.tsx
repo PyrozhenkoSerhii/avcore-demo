@@ -6,28 +6,24 @@ import { Video } from "../styled";
 import { Loader, WithLoaderWrapper } from "./styled";
 
 const { ErrorTypes } = Hls;
-const {
-  useRef, useEffect, useMemo, useState,
-} = React;
+const { useRef, useEffect, useMemo } = React;
 
 type TProps = {
   url: string;
+  available: boolean;
 }
 
-export const HLSPlayerComponent = ({ url }: TProps): JSX.Element => {
+export const HLSPlayerComponent = ({ url, available }: TProps): JSX.Element => {
   const videoRef = useRef<HTMLVideoElement>(null);
-
-  const [loading, setLoading] = useState(true);
 
   const hls = useMemo(() => new Hls({ capLevelToPlayerSize: true }), []);
 
   useEffect(() => {
-    if (hls && url && videoRef.current) {
+    if (hls && url && videoRef.current && available) {
       hls.loadSource(url);
       hls.attachMedia(videoRef.current);
 
       hls.on(Hls.Events.MANIFEST_PARSED, () => {
-        setLoading(false);
         videoRef.current.play();
       });
 
@@ -40,16 +36,16 @@ export const HLSPlayerComponent = ({ url }: TProps): JSX.Element => {
         }
       });
     }
-  }, [hls, url]);
+  }, [hls, url, available]);
 
   return (
     <WithLoaderWrapper>
-      {loading && url && (
+      {!available && url && (
         <Loader>
           <CircularProgress />
         </Loader>
       )}
-      <Video ref={videoRef} />
+      <Video ref={videoRef} muted controls />
     </WithLoaderWrapper>
   );
 };

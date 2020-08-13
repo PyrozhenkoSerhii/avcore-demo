@@ -7,14 +7,12 @@ import { CloudDownload, CloudUpload } from "@material-ui/icons";
 
 import { socketService } from "./services/socket";
 import { AlertComponent } from "./components/Alert";
-// import { HLSPlayerComponent } from "./components/HLSPlayer";
 import { HLSPlayerVideoJSComponent } from "./components/HLSPlayerVideoJS";
 import { PlayerComponent } from "./components/Player";
 
 import {
   AppWrapper, Header, Content, ContentColumn, ColumnInfo, ColumnController,
 } from "./components/styled";
-// import { HLSPlayerVideoJSComponent } from "./components/HLSPlayerVideoJS";
 
 const { useContext, useEffect } = React;
 
@@ -58,7 +56,7 @@ export const App = observer(():JSX.Element => {
               </Button>
             </ColumnController>
 
-            <PlayerComponent source={socketStore.mediaStream} />
+            <PlayerComponent source={socketStore.mediaStream} self />
           </ContentColumn>
 
           <ContentColumn>
