@@ -1,6 +1,7 @@
 import dotenv from "dotenv";
 dotenv.config();
 
+import config from "config";
 import {createServer} from "https";
 import fs from "fs";
 import path from "path";
@@ -18,9 +19,9 @@ const app = express();
 const PORT = Number(process.env.PORT);
 const SECRET = process.env.SECRET;
 
-const privateKey = fs.readFileSync("/etc/letsencrypt/live/app.avcore.io/privkey.pem", "utf8");
-const certificate = fs.readFileSync("/etc/letsencrypt/live/app.avcore.io/cert.pem", "utf8");
-const ca = fs.readFileSync("/etc/letsencrypt/live/app.avcore.io/chain.pem", "utf8");
+const privateKey = fs.readFileSync(config.get("privateKey"), "utf8");
+const certificate = fs.readFileSync(config.get("certificate"), "utf8");
+const ca = fs.readFileSync(config.get("ca"), "utf8");
 
 const credentials = {
   key: privateKey,
@@ -29,6 +30,10 @@ const credentials = {
 };
 
 app.use(express.static(path.join(__dirname, "../client/dist")));
+
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "../client/dist", "index.html"));
+});
 
 const httpsServer = createServer(credentials, app);
 
