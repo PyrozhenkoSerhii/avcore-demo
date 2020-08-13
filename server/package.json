@@ -4,7 +4,9 @@
   "scripts": {
     "build": "tsc",
     "dev": "better-npm-run dev",
-    "prod": "better-npm-run prod"
+    "prod": "better-npm-run prod",
+    "pm2": "better-npm-run-pm2",
+    "postinstall": "pm2 install typecsript"
   },
   "betterScripts": {
     "dev": {
@@ -15,6 +17,12 @@
     },
     "prod": {
       "command": "ts-node ./index.ts",
+      "env": {
+        "NODE_ENV": "production"
+      }
+    },
+    "pm2": {
+      "command": "pm2 start --watch",
       "env": {
         "NODE_ENV": "production"
       }
