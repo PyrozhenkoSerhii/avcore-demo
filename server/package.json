@@ -16,7 +16,7 @@
       }
     },
     "prod": {
-      "command": "ts-node ./index.ts",
+      "command": "ts-node ./index.ts  >/tmp/app.log 2>&1 &",
       "env": {
         "NODE_ENV": "production"
       }
