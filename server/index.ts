@@ -1,6 +1,8 @@
 import dotenv from "dotenv";
 dotenv.config();
 
+import {createServer} from "https";
+import fs from "fs";
 import path from "path";
 import express from "express";
 import jwt from "jsonwebtoken";
@@ -16,13 +18,21 @@ const app = express();
 const PORT = Number(process.env.PORT);
 const SECRET = process.env.SECRET;
 
+const privateKey = fs.readFileSync("/etc/letsencrypt/live/app.example.com/privkey.pem", "utf8");
+const certificate = fs.readFileSync("/etc/letsencrypt/live/app.example.com/cert.pem", "utf8");
+const ca = fs.readFileSync("/etc/letsencrypt/live/app.example.com/chain.pem", "utf8");
+
+const credentials = {
+  key: privateKey,
+  cert: certificate,
+  ca: ca
+};
+
 app.use(express.static(path.join(__dirname, "../client/dist")));
 
-const server = app.listen(PORT, () => {
-  console.log(`> Server is listening on port ${PORT}`);
-});
+const httpsServer = createServer(credentials, app);
 
-const io = socketIO(server);
+const io = socketIO(httpsServer);
 
 io.on("connection", (socket: IExtSocket) => {
   console.log("> Socket connection was established");
@@ -59,4 +69,9 @@ io.on("connection", (socket: IExtSocket) => {
       api.mixerClose({ mixerId:socket.mixerId });
     }
   });
+});
+
+
+httpsServer.listen(PORT, () => {
+  console.log(`HTTPS Server running on port ${PORT}`);
 });
