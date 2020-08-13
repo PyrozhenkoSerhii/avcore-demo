@@ -2,8 +2,9 @@ import styled from "styled-components";
 
 export const WithLoaderWrapper = styled.div`
   display: block;
-  width: 640;
-  height: 480;
+  width: 80%;
+  max-width: 640px;
+  max-height: 480px;
   position: relative;
 `;
 

@@ -62,7 +62,7 @@ export const App = observer(():JSX.Element => {
           <ContentColumn>
             <ColumnInfo>
               <Typography variant="h6">Subscribe to the stream you&apos;ve just published via WebRTC</Typography>
-              <Typography variant="body1">You will be able to subscribe as soon as you publish your stream</Typography>
+              <Typography variant="body2">You will be able to subscribe as soon as you publish your stream</Typography>
             </ColumnInfo>
 
             <ColumnController>
@@ -84,7 +84,7 @@ export const App = observer(():JSX.Element => {
 
             <ColumnInfo>
               <Typography variant="h6">Subscribe to the stream you&apos;ve just published via HLS</Typography>
-              <Typography variant="body1">You will be able to subscribe as soon as you publish your stream</Typography>
+              <Typography variant="body2">You will be able to subscribe as soon as you publish your stream</Typography>
             </ColumnInfo>
 
             <ColumnController>
