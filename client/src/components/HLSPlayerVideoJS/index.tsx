@@ -26,6 +26,10 @@ export const HLSPlayerVideoJSComponent = ({ url, available }: TProps): JSX.Eleme
         }],
       });
 
+      videoRef.current.addEventListener("canplay", () => {
+        player.play();
+      });
+
       player.play();
     }
   }, [url, available]);
