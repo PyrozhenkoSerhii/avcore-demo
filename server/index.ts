@@ -1,3 +1,6 @@
+import dotenv from "dotenv";
+dotenv.config();
+
 import path from "path";
 import express from "express";
 import jwt from "jsonwebtoken";
@@ -11,13 +14,12 @@ import { IExtSocket, TOnAuthProps, TOnSaveMixerProps, TOnAuthCallback } from "./
 const app = express();
 
 const PORT = Number(process.env.PORT);
-const HOST = process.env.HOST;
 const SECRET = process.env.SECRET;
 
 app.use(express.static(path.join(__dirname, "../client/dist")));
 
-const server = app.listen(PORT, HOST, () => {
-  console.log(`> Server is listening on ${HOST}:${PORT}`);
+const server = app.listen(PORT, () => {
+  console.log(`> Server is listening on port ${PORT}`);
 });
 
 const io = socketIO(server);
