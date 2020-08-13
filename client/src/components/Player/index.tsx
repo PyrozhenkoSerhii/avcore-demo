@@ -32,6 +32,6 @@ export const PlayerComponent = ({ source, self, playback }: TProps): JSX.Element
   }, [source, playback]);
 
   return (
-    <Video ref={player} muted controls={!self && !!source} />
+    <Video ref={player} muted controls={!self && !!source} playsInline />
   );
 };

@@ -45,7 +45,7 @@ export const HLSPlayerComponent = ({ url, available }: TProps): JSX.Element => {
           <CircularProgress />
         </Loader>
       )}
-      <Video ref={videoRef} muted controls />
+      <Video ref={videoRef} muted controls playsInline />
     </WithLoaderWrapper>
   );
 };
