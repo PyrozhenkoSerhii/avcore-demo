@@ -6,7 +6,7 @@
     "dev": "better-npm-run dev",
     "prod": "better-npm-run prod",
     "pm2": "better-npm-run pm2",
-    "postinstall": "pm2 install typecsript"
+    "postinstall": "pm2 install typescript"
   },
   "betterScripts": {
     "dev": {

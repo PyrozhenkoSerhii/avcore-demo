@@ -3,7 +3,7 @@ module.exports = {
   port: "443",
   protocol: "https",
   secret: process.env.SECRET,
-  privateKey: "./key.pem",
-  certificate: "./cert.pem",
-  ca: "./csr.pem",
+  privateKey: "./ssl/key.pem",
+  certificate: "./ssl/cert.pem",
+  ca: "./ssl/csr.pem",
 };
