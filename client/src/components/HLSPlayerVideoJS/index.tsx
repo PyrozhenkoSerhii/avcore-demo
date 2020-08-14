@@ -18,6 +18,13 @@ export const HLSPlayerVideoJSComponent = ({ url, available }: TProps): JSX.Eleme
   useEffect(() => {
     if (videoRef.current && url && available) {
       const player = videojs(videoRef.current, {
+        html5: {
+          nativeAudioTracks: false,
+          nativeVideoTracks: false,
+          hls: {
+            overrideNative: true,
+          },
+        },
         autoplay: true,
         controls: true,
         sources: [{
