@@ -11,6 +11,12 @@ import { API_OPERATION, MediasoupSocketApi, MIXER_PIPE_TYPE } from "avcore";
 import { conferenceConfig, mixerPipeFormats, mixerOptions } from "../config/stream";
 
 class SocketService {
+  @observable publishDisabled = false;
+
+  @observable listenRTCDisabled = true;
+
+  @observable listenHLSDisabled = true;
+
   @observable socket: SocketIOClient.Socket = null;
 
   @observable streamId: string = null;
@@ -18,6 +24,10 @@ class SocketService {
   @observable mediaStream: MediaStream = null;
 
   @observable incommingStream: MediaStream = null;
+
+  @observable mixerId: string = null;
+
+  @observable hlsUrlRetryTimer = null;
 
   @observable hlsUrl: string = null;
 
@@ -52,47 +62,72 @@ class SocketService {
 
   @action publishStream = async () => {
     if (this.mediaStream) {
-      const streamId = shortId.generate();
+      try {
+        this.publishDisabled = true;
+        const streamId = shortId.generate();
 
-      this.socket.emit("auth", { stream: streamId, operation: API_OPERATION.PUBLISH }, async (token: string) => {
-        const capture = new ConferenceApi({
-          ...this.conferenceConfig,
-          stream: streamId,
-          token,
+        this.socket.emit("auth", { stream: streamId, operation: API_OPERATION.PUBLISH }, async (token: string) => {
+          const capture = new ConferenceApi({
+            ...this.conferenceConfig,
+            stream: streamId,
+            token,
+          });
+
+          await capture.publish(this.mediaStream);
+          this.streamId = streamId;
+          this.capture = capture;
+
+          this.publishDisabled = false;
+          this.listenHLSDisabled = false;
+          this.listenRTCDisabled = false;
         });
-
-        await capture.publish(this.mediaStream);
-        this.streamId = streamId;
-        this.capture = capture;
-      });
+      } catch (err) {
+        this.error = err.response;
+      }
     }
   }
 
   @action stopPublishing = async () => {
+    this.publishDisabled = true;
+
+    if (this.playback) {
+      this.stopListeningWebRTC();
+    }
+
+    if (this.mixerId && this.hlsUrl) {
+      this.stopListeningHLS();
+    }
+
     this.capture.close();
     this.streamId = null;
     this.mediaStream = await Utils.getUserMedia({ video: true, audio: true });
 
-    if (this.playback) {
-      this.playback.close();
-      this.incommingStream = null;
+    this.publishDisabled = false;
+    this.listenHLSDisabled = true;
+    this.listenRTCDisabled = true;
+  }
+
+  @action listenStreamWebRTC = async () => {
+    try {
+      this.listenRTCDisabled = true;
+      this.socket.emit("auth", { stream: this.streamId, operation: API_OPERATION.SUBSCRIBE }, async (token: string) => {
+        const playback = new ConferenceApi({
+          ...this.conferenceConfig,
+          stream: this.streamId,
+          token,
+        });
+
+        this.incommingStream = await playback.subscribe();
+        this.playback = playback;
+        this.listenRTCDisabled = false;
+      });
+    } catch (err) {
+      this.error = err.response;
+      this.listenRTCDisabled = false;
     }
   }
 
-  @action listenStream = async () => {
-    this.socket.emit("auth", { stream: this.streamId, operation: API_OPERATION.SUBSCRIBE }, async (token: string) => {
-      const playback = new ConferenceApi({
-        ...this.conferenceConfig,
-        stream: this.streamId,
-        token,
-      });
-
-      this.incommingStream = await playback.subscribe();
-      this.playback = playback;
-    });
-  }
-
-  @action stopListening = async () => {
+  @action stopListeningWebRTC = async () => {
     this.playback.close();
     this.incommingStream = null;
   }
@@ -105,7 +140,7 @@ class SocketService {
       if (err.response.status === 404) {
         // eslint-disable-next-line no-console
         console.log("Hls video not available. Retring in 1 second");
-        setTimeout(() => {
+        this.hlsUrlRetryTimer = setTimeout(() => {
           this.checkUrl(url);
         }, 1000);
       } else {
@@ -114,7 +149,8 @@ class SocketService {
     }
   }
 
-  @action mixerStart = async () => {
+  @action listenStreamHLS = async () => {
+    this.listenRTCDisabled = true;
     this.socket.emit("auth", { stream: this.streamId, operation: API_OPERATION.MIXER }, async (token: string) => {
       try {
         const api = new MediasoupSocketApi(
@@ -160,8 +196,35 @@ class SocketService {
         await this.checkUrl(url);
 
         this.hlsUrl = url;
+        this.mixerId = mixerId;
+        this.listenRTCDisabled = false;
       } catch (err) {
-        this.error = err;
+        this.error = err.response;
+        this.listenRTCDisabled = false;
+      }
+    });
+  }
+
+  @action stopListeningHLS = () => {
+    this.socket.emit("auth", { stream: this.streamId, operation: API_OPERATION.MIXER }, async (token: string) => {
+      if (this.mixerId) {
+        const api = new MediasoupSocketApi(
+          this.conferenceConfig.url,
+          this.conferenceConfig.worker,
+          token,
+        );
+
+        api.mixerClose({ mixerId: this.mixerId });
+
+        if (this.hlsUrlRetryTimer) {
+          console.log("crearing timer");
+          clearTimeout(this.hlsUrlRetryTimer);
+          this.hlsUrlRetryTimer = null;
+        }
+
+        this.hlsUrl = null;
+        this.hlsAvailable = false;
+        this.mixerId = null;
       }
     });
   }

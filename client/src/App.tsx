@@ -49,6 +49,7 @@ export const App = observer(():JSX.Element => {
                 variant="contained"
                 color="primary"
                 endIcon={<CloudUpload />}
+                disabled={socketStore.publishDisabled}
                 onClick={socketStore.streamId
                   ? socketStore.stopPublishing
                   : socketStore.publishStream}
@@ -80,9 +81,9 @@ export const App = observer(():JSX.Element => {
                 color="primary"
                 endIcon={<CloudDownload />}
                 onClick={socketStore.incommingStream
-                  ? socketStore.stopListening
-                  : socketStore.listenStream}
-                disabled={!socketStore.streamId}
+                  ? socketStore.stopListeningWebRTC
+                  : socketStore.listenStreamWebRTC}
+                disabled={socketStore.listenRTCDisabled}
               >
                 {socketStore.incommingStream ? "Unsubscribe" : "Subscribe"}
               </ButtonWithStyles>
@@ -107,11 +108,13 @@ export const App = observer(():JSX.Element => {
                 dynamicColor={socketStore.hlsUrl ? "#5f5e5e" : "primary"}
                 variant="contained"
                 color="primary"
-                onClick={socketStore.mixerStart}
-                disabled={!socketStore.streamId || !!socketStore.hlsUrl}
                 endIcon={<CloudDownload />}
+                onClick={socketStore.hlsUrl
+                  ? socketStore.stopListeningHLS
+                  : socketStore.listenStreamHLS}
+                disabled={socketStore.listenHLSDisabled}
               >
-                {socketStore.hlsUrl ? "Subscribed" : "Subscribe"}
+                {socketStore.hlsUrl ? "Unsubscribe" : "Subscribe"}
               </ButtonWithStyles>
             </ColumnController>
 

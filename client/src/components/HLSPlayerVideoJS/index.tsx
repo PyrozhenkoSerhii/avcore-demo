@@ -5,7 +5,7 @@ import { CircularProgress } from "@material-ui/core";
 import { Video } from "../styled";
 import { Loader, WithLoaderWrapper } from "../HLSPlayer/styled";
 
-const { useRef, useEffect } = React;
+const { useRef, useEffect, useState } = React;
 
 type TProps = {
   url: string;
@@ -14,10 +14,11 @@ type TProps = {
 
 export const HLSPlayerVideoJSComponent = ({ url, available }: TProps): JSX.Element => {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const [player, setPlayer] = useState(null);
 
   useEffect(() => {
     if (videoRef.current && url && available) {
-      const player = videojs(videoRef.current, {
+      const instance = videojs(videoRef.current, {
         html5: {
           nativeAudioTracks: false,
           nativeVideoTracks: false,
@@ -34,12 +35,20 @@ export const HLSPlayerVideoJSComponent = ({ url, available }: TProps): JSX.Eleme
       });
 
       videoRef.current.addEventListener("canplay", () => {
-        player.play();
+        instance.play();
       });
 
-      player.play();
+      instance.play();
+
+      setPlayer(instance);
     }
   }, [url, available]);
+
+  useEffect(() => {
+    if (player && !url) {
+      player.reset();
+    }
+  }, [player, url]);
 
   return (
     <WithLoaderWrapper>
