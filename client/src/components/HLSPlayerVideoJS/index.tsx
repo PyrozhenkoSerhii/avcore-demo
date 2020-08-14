@@ -18,7 +18,7 @@ export const HLSPlayerVideoJSComponent = ({ url, available }: TProps): JSX.Eleme
   const [playing, setPlaying] = useState(false);
 
   useEffect(() => {
-    if (videoRef.current && url && available) {
+    if (videoRef.current && available) {
       const instance = videojs(videoRef.current, {
         html5: {
           nativeAudioTracks: false,
@@ -40,7 +40,7 @@ export const HLSPlayerVideoJSComponent = ({ url, available }: TProps): JSX.Eleme
 
       setPlayer(instance);
     }
-  }, [url, available]);
+  }, [available]);
 
   useEffect(() => {
     if (player && available) {
@@ -62,15 +62,21 @@ export const HLSPlayerVideoJSComponent = ({ url, available }: TProps): JSX.Eleme
     }
   }, [player, playing, available]);
 
+  /**
+   * Extra div was added to fix a strange issue of compatibility of
+   * styled-components and video.js on stop/start
+   * https://github.com/facebook/react/issues/13278
+   */
   return (
-  // <WithLoaderWrapper>
-  //   {url && !available && (
-  //     <Loader>
-  //       <CircularProgress />
-  //     </Loader>
-  //   )}
-    <video ref={videoRef} className="video-js" muted playsInline />
-  // </WithLoaderWrapper>
-
+    <WithLoaderWrapper>
+      {url && !available && (
+      <Loader>
+        <CircularProgress />
+      </Loader>
+      )}
+      <div>
+        <Video fullSize ref={videoRef} className="video-js" muted playsInline />
+      </div>
+    </WithLoaderWrapper>
   );
 };
