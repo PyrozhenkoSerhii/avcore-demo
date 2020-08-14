@@ -1,4 +1,7 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import * as React from "react";
 import styled from "styled-components";
+import { Button } from "@material-ui/core";
 
 export const AppWrapper = styled.div`
   width: 100%;
@@ -108,5 +111,19 @@ export const InfoContent = styled(Text)`
 
   @media (max-width: 480px) {
     font-size: 18px;
+  }
+`;
+
+type TStyledButtonProps = {
+  dynamicColor: string;
+}
+
+export const ButtonWithStyles = styled(({ dynamicColor, ...otherProps }) => <Button {...otherProps} />)<TStyledButtonProps>`
+  && {
+    background-color: ${(props) => props.dynamicColor};
+
+    &:hover {
+      background-color: ${(props) => props.dynamicColor};
+    }
   }
 `;

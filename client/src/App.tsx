@@ -2,7 +2,7 @@ import * as React from "react";
 import { observer } from "mobx-react";
 import { useLocation } from "react-router-dom";
 
-import { Button, Typography } from "@material-ui/core";
+import { Typography } from "@material-ui/core";
 import { CloudDownload, CloudUpload } from "@material-ui/icons";
 
 import { socketService } from "./services/socket";
@@ -11,7 +11,8 @@ import { HLSPlayerVideoJSComponent } from "./components/HLSPlayerVideoJS";
 import { PlayerComponent } from "./components/Player";
 
 import {
-  AppWrapper, Header, Content, ContentColumn, ColumnInfo, ColumnController, InfoHeader, InfoContent,
+  AppWrapper, Header, Content, ContentColumn, ColumnInfo,
+  ColumnController, InfoHeader, InfoContent, ButtonWithStyles,
 } from "./components/styled";
 
 const { useContext, useEffect } = React;
@@ -43,8 +44,8 @@ export const App = observer(():JSX.Element => {
             </ColumnInfo>
 
             <ColumnController>
-              <Button
-                style={{ backgroundColor: socketStore.streamId ? "#5f5e5e" : "primary" }}
+              <ButtonWithStyles
+                dynamicColor={socketStore.streamId ? "#5f5e5e" : "primary"}
                 variant="contained"
                 color="primary"
                 endIcon={<CloudUpload />}
@@ -53,7 +54,7 @@ export const App = observer(():JSX.Element => {
                   : socketStore.publishStream}
               >
                 {socketStore.streamId ? "Stop" : "Publish"}
-              </Button>
+              </ButtonWithStyles>
             </ColumnController>
 
             <PlayerComponent
@@ -65,14 +66,16 @@ export const App = observer(():JSX.Element => {
           <ContentColumn>
             <ColumnInfo>
               <InfoHeader>Subscribe to the stream you&apos;ve just published via WebRTC</InfoHeader>
-              <InfoContent>
-                You will be able to subscribe as soon as you publish your stream
-              </InfoContent>
+              {!socketStore.streamId && (
+                <InfoContent>
+                  You will be able to subscribe as soon as you publish your stream
+                </InfoContent>
+              )}
             </ColumnInfo>
 
             <ColumnController>
-              <Button
-                style={{ backgroundColor: socketStore.incommingStream ? "#5f5e5e" : "primary" }}
+              <ButtonWithStyles
+                dynamicColor={socketStore.incommingStream ? "#5f5e5e" : "primary"}
                 variant="contained"
                 color="primary"
                 endIcon={<CloudDownload />}
@@ -82,7 +85,7 @@ export const App = observer(():JSX.Element => {
                 disabled={!socketStore.streamId}
               >
                 {socketStore.incommingStream ? "Unsubscribe" : "Subscribe"}
-              </Button>
+              </ButtonWithStyles>
             </ColumnController>
 
             <PlayerComponent
@@ -92,14 +95,16 @@ export const App = observer(():JSX.Element => {
 
             <ColumnInfo>
               <InfoHeader>Subscribe to the stream you&apos;ve just published via HLS</InfoHeader>
-              <InfoContent>
-                You will be able to subscribe as soon as you publish your stream
-              </InfoContent>
+              {!socketStore.streamId && (
+                <InfoContent>
+                  You will be able to subscribe as soon as you publish your stream
+                </InfoContent>
+              )}
             </ColumnInfo>
 
             <ColumnController>
-              <Button
-                style={{ backgroundColor: socketStore.hlsUrl ? "#5f5e5e" : "primary" }}
+              <ButtonWithStyles
+                dynamicColor={socketStore.hlsUrl ? "#5f5e5e" : "primary"}
                 variant="contained"
                 color="primary"
                 onClick={socketStore.mixerStart}
@@ -107,7 +112,7 @@ export const App = observer(():JSX.Element => {
                 endIcon={<CloudDownload />}
               >
                 {socketStore.hlsUrl ? "Subscribed" : "Subscribe"}
-              </Button>
+              </ButtonWithStyles>
             </ColumnController>
 
             <HLSPlayerVideoJSComponent
