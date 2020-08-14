@@ -4,13 +4,20 @@
   "scripts": {
     "build": "tsc",
     "dev": "better-npm-run dev",
+    "pm2:dev": "better-npm-run pm2:dev",
     "prod": "better-npm-run prod",
-    "pm2": "better-npm-run pm2",
-    "postinstall": "pm2 install typescript"
+    "pm2:prod": "better-npm-run pm2:prod",
+    "postinstall": "pm2 install typescript && pm2 install ts-node"
   },
   "betterScripts": {
     "dev": {
       "command": "nodemon -r dotenv/config ./index.ts",
+      "env": {
+        "NODE_ENV": "development"
+      }
+    },
+    "pm2:dev": {
+      "command": "tsc -w & pm2 start pm2/ecosystem.development.config.js",
       "env": {
         "NODE_ENV": "development"
       }
@@ -21,10 +28,11 @@
         "NODE_ENV": "production"
       }
     },
-    "pm2": {
-      "command": "pm2 start --watch",
+    "pm2:prod": {
+      "command": "pm2 start pm2/ecosystem.production.config.js",
       "env": {
-        "NODE_ENV": "production"
+        "NODE_ENV": "production",
+        "FROM_BUILD": true
       }
     }
   },
