@@ -136,6 +136,7 @@ class SocketService {
     try {
       await axios.get(url);
       this.hlsAvailable = true;
+      this.listenHLSDisabled = false;
     } catch (err) {
       if (err.response.status === 404) {
         // eslint-disable-next-line no-console
@@ -150,7 +151,7 @@ class SocketService {
   }
 
   @action listenStreamHLS = async () => {
-    this.listenRTCDisabled = true;
+    this.listenHLSDisabled = true;
     this.socket.emit("auth", { stream: this.streamId, operation: API_OPERATION.MIXER }, async (token: string) => {
       try {
         const api = new MediasoupSocketApi(
@@ -197,7 +198,6 @@ class SocketService {
 
         this.hlsUrl = url;
         this.mixerId = mixerId;
-        this.listenRTCDisabled = false;
       } catch (err) {
         this.error = err.response;
         this.listenRTCDisabled = false;
@@ -217,7 +217,6 @@ class SocketService {
         api.mixerClose({ mixerId: this.mixerId });
 
         if (this.hlsUrlRetryTimer) {
-          console.log("crearing timer");
           clearTimeout(this.hlsUrlRetryTimer);
           this.hlsUrlRetryTimer = null;
         }

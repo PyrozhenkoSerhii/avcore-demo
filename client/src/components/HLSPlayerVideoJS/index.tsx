@@ -15,6 +15,7 @@ type TProps = {
 export const HLSPlayerVideoJSComponent = ({ url, available }: TProps): JSX.Element => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [player, setPlayer] = useState(null);
+  const [playing, setPlaying] = useState(false);
 
   useEffect(() => {
     if (videoRef.current && url && available) {
@@ -28,10 +29,7 @@ export const HLSPlayerVideoJSComponent = ({ url, available }: TProps): JSX.Eleme
         },
         autoplay: true,
         controls: true,
-        sources: [{
-          src: url,
-          type: "application/x-mpegURL",
-        }],
+
       });
 
       videoRef.current.addEventListener("canplay", () => {
@@ -45,20 +43,34 @@ export const HLSPlayerVideoJSComponent = ({ url, available }: TProps): JSX.Eleme
   }, [url, available]);
 
   useEffect(() => {
-    if (player && !url) {
-      player.reset();
+    if (player && available) {
+      player.muted(true);
+      player.controls(true);
+      player.src({
+        src: url,
+        type: "application/x-mpegURL",
+      });
+      setPlaying(true);
     }
-  }, [player, url]);
+  }, [player, available]);
+
+  useEffect(() => {
+    if (player && playing && !available) {
+      player.controls(false);
+      player.reset();
+      setPlaying(false);
+    }
+  }, [player, playing, available]);
 
   return (
-    <WithLoaderWrapper>
-      {url && !available && (
-        <Loader>
-          <CircularProgress />
-        </Loader>
-      )}
-      <Video ref={videoRef} className="video-js" muted fullSize playsInline />
-    </WithLoaderWrapper>
+  // <WithLoaderWrapper>
+  //   {url && !available && (
+  //     <Loader>
+  //       <CircularProgress />
+  //     </Loader>
+  //   )}
+    <video ref={videoRef} className="video-js" muted playsInline />
+  // </WithLoaderWrapper>
 
   );
 };
