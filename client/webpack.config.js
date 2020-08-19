@@ -10,6 +10,7 @@ module.exports = {
     extensions: [".tsx", ".ts", ".jsx", ".js", ".json"],
   },
   entry: "./index.tsx",
+  devtool: "source-map",
   module: {
     rules: [
       {

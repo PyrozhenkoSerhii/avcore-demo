@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/ban-ts-comment */
-// @ts-ignore
 import { Utils, ConferenceApi } from "avcore/client/dist";
 import { createContext } from "react";
 import { observable, action } from "mobx";
