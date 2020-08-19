@@ -12,17 +12,6 @@ export const AppWrapper = styled.div`
   padding-bottom: 40px;
 `;
 
-export const Header = styled.div`
-  width: 100%;
-  height: 8%;
-  background: #262A2B;
-  padding: 20px;
-  color: white;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-`;
-
 export const Content = styled.div`
   width: 100%;
   height: 90%;
