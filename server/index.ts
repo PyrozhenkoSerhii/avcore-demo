@@ -35,7 +35,7 @@ const clientDistFolder = process.env.FROM_BUILD ? "../../client/dist" : "../clie
 app.use(cors());
 app.use(express.static(path.join(__dirname, clientDistFolder)));
 
-app.get("/", (req, res) => {
+app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, clientDistFolder, "index.html"));
 });
 
