@@ -7,12 +7,15 @@ import { Canvas } from "../../interfaces/canvas";
 import { latencyService } from "../../services/latency";
 import { PlayerComponent } from "../../components/Player";
 
-const {
-  useEffect, useState, useRef, useContext,
-} = React;
+import { LatencyWrapper } from "./styled";
+
+const { useEffect, useState, useContext } = React;
 
 const styles = { width: "200px", height: "200px" };
 
+/**
+ * TODO: same params in router via mobx store
+ */
 export const LatencyPage = observer((): JSX.Element => {
   const latencyStore = useContext(latencyService);
   const location = useLocation();
@@ -20,8 +23,6 @@ export const LatencyPage = observer((): JSX.Element => {
   useEffect(() => {
     latencyStore.updateServersFromLocation(location.search);
   }, [location]);
-
-  const player = useRef<HTMLVideoElement>(null);
 
   const [value, setValue] = useState(Date.now().toString());
 
@@ -33,21 +34,26 @@ export const LatencyPage = observer((): JSX.Element => {
   }, []);
 
   useEffect(() => {
-    if (player.current) {
-      const canvas = document.getElementById("qrcode") as Canvas;
-      const canvasStream = canvas.captureStream();
+    const canvas = document.getElementById("qrcode") as Canvas;
+    const canvasStream = canvas.captureStream();
 
-      latencyStore.publishCanvas(canvasStream);
+    latencyStore.publishCanvas(canvasStream);
 
-      player.current.srcObject = canvasStream;
-    }
+    return () => latencyStore.clean();
   }, []);
 
   return (
-    <>
+    <LatencyWrapper>
       <QRCode id="qrcode" style={styles} value={value} />
-      <video muted style={styles} autoPlay ref={player} />
-      <PlayerComponent source={latencyStore.incommingStream} />
-    </>
+
+      {latencyStore.subscribedStreams.map((subscribedStream) => (
+        <PlayerComponent
+          height={styles.height}
+          width={styles.width}
+          source={subscribedStream.stream}
+          disabledConrols
+        />
+      ))}
+    </LatencyWrapper>
   );
 });

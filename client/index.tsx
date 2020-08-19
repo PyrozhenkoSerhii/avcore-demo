@@ -8,8 +8,9 @@ import { App } from "./src/App";
 const GlobalStyle = createGlobalStyle`
   html, body, #app {
     margin: 0;
-    min-height: 100%;
+    min-height: 100vh;
   }
+
   * {
     box-sizing: border-box;
     font-family: "Roboto";

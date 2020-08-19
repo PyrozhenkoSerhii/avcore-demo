@@ -1,6 +1,6 @@
 import { ConferenceApi } from "avcore/client/dist";
 import { createContext } from "react";
-import { observable, action, observe } from "mobx";
+import { observable, action } from "mobx";
 import { forEach } from "lodash";
 import * as queryString from "query-string";
 import * as io from "socket.io-client";
@@ -10,8 +10,16 @@ import { API_OPERATION } from "avcore";
 interface IPublishedStream {
   url: string;
   streamId: string;
-  capture: unknown;
+  capture: ConferenceApi;
   worker: number;
+}
+
+interface ISubscribedStream {
+  url: string;
+  worker: number;
+  streamId: string;
+  playback: ConferenceApi;
+  stream: MediaStream;
 }
 
 class LatencyService {
@@ -25,15 +33,9 @@ class LatencyService {
 
   @observable socket: SocketIOClient.Socket = null;
 
-  @observable streamId: string = null;
-
-  @observable capture = null;
-
-  @observable playback = null;
-
-  @observable incommingStream: MediaStream = null;
-
   @observable publishedStreams: Array<IPublishedStream> = [];
+
+  @observable subscribedStreams: Array<ISubscribedStream> = [];
 
   constructor() {
     this.socket = io(`${process.env.PROTOCOL}://${process.env.HOST}:${process.env.PORT}`);
@@ -44,7 +46,6 @@ class LatencyService {
 
     forEach(parsed, (value, key) => {
       const parsedValue = typeof value === "string" ? value : value[0];
-
       if (key.match(/server/) && !this.servers.includes(parsedValue)) {
         this.servers.push(parsedValue);
       } else if (key.match(/worker/) && !this.workers.includes(Number(parsedValue))) {
@@ -55,6 +56,9 @@ class LatencyService {
     this.updated = true;
   }
 
+  /**
+   * TODO: make parallel publishing
+   */
   @action publishCanvas = async (mediaStream: MediaStream) => {
     this.servers.forEach((server) => {
       const streamId = shortId.generate();
@@ -69,43 +73,66 @@ class LatencyService {
 
         await capture.publish(mediaStream);
 
-        this.streamId = streamId;
-        this.capture = capture;
-
-        this.publishedStreams.push({
+        const published: IPublishedStream = {
           streamId,
           url: server,
           capture,
           worker: this.workers[0],
+        };
+
+        this.listenStream(published);
+
+        this.publishedStreams.push(published);
+      });
+    });
+  }
+
+  @action listenStream = async ({ streamId, url, worker: publishingWorker }: IPublishedStream) => {
+    this.workers.forEach((subscribingWorker) => {
+      this.socket.emit("auth", { stream: streamId, operation: API_OPERATION.SUBSCRIBE }, async (token: string) => {
+        const playback = new ConferenceApi({
+          kinds: this.kinds,
+          url,
+          worker: subscribingWorker,
+          stream: streamId,
+          token,
+          origin: {
+            url,
+            worker: publishingWorker,
+          },
         });
+
+        const incommingStream = await playback.subscribe();
+
+        const subscribed: ISubscribedStream = {
+          url,
+          streamId,
+          playback,
+          stream: incommingStream,
+          worker: subscribingWorker,
+        };
+
+        this.subscribedStreams.push(subscribed);
       });
     });
   }
 
-  @action listenStream = async (stream: IPublishedStream) => {
-    this.socket.emit("auth", { stream: stream.streamId, operation: API_OPERATION.SUBSCRIBE }, async (token: string) => {
-      const playback = new ConferenceApi({
-        kinds: this.kinds,
-        url: stream.url,
-        worker: stream.worker,
-        stream: stream.streamId,
-        token,
-        origin: {
-          url: stream.url,
-          worker: stream.worker,
-        },
-      });
-
-      this.incommingStream = await playback.subscribe();
-      this.playback = playback;
+  @action clean = async () => {
+    this.subscribedStreams.forEach((subscribedStream) => {
+      subscribedStream.playback.close();
     });
-  }
+    this.subscribedStreams = [];
 
-  disposer = observe(this.publishedStreams, () => {
-    this.listenStream(this.publishedStreams[0]);
-  })
+    this.publishedStreams.forEach((publishedStream) => {
+      publishedStream.capture.close();
+    });
+
+    this.publishedStreams = [];
+    this.updated = false;
+  }
 }
 
 export const latencyService = createContext(new LatencyService());
 
-// http://localhost:4000/latency?
+// Sample url to test two servers with two workers each
+// http://localhost:4000/latency?server=https://node99.meshub.tv&worker=0&worker1=1

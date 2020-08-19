@@ -5,7 +5,7 @@ import { Button } from "@material-ui/core";
 
 export const AppWrapper = styled.div`
   width: 100%;
-  height: 100%;
+  min-height: 100vh;
   background: #191B1C;
   display: flex;
   flex-direction: column;
@@ -52,12 +52,14 @@ export const ColumnController = styled.div`
 
 type TVideoElementProps = {
   fullSize?: boolean;
+  maxWidth?: string;
+  height?: string;
 }
 
 export const Video = styled.video<TVideoElementProps>`
   width: ${(props) => (props.fullSize ? "100%" : "80%")};
-  max-width: 640px;
-  height: 480px;
+  max-width: ${(props) => (props.maxWidth || "640px")};
+  height: ${(props) => (props.height || "480px")};
   margin-top: 10px;
 `;
 

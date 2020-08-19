@@ -9,9 +9,14 @@ type TProps = {
   source: MediaStream;
   self?: boolean;
   playback?: any;
+  width?: string;
+  height?: string;
+  disabledConrols?: boolean;
 }
 
-export const PlayerComponent = ({ source, self, playback }: TProps): JSX.Element => {
+export const PlayerComponent = ({
+  source, self, playback, width, height, disabledConrols,
+}: TProps): JSX.Element => {
   const player = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
@@ -32,6 +37,13 @@ export const PlayerComponent = ({ source, self, playback }: TProps): JSX.Element
   }, [source, playback]);
 
   return (
-    <Video ref={player} muted controls={!self && !!source} playsInline />
+    <Video
+      ref={player}
+      controls={!self && !!source && !disabledConrols}
+      maxWidth={width}
+      height={height}
+      playsInline
+      muted
+    />
   );
 };
