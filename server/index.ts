@@ -30,7 +30,7 @@ const credentials = {
 
 const app = express();
 
-const clientDistFolder = process.env.FROM_BUILD ? "../../client/dist" : "../client/dist";
+const clientDistFolder = process.env.FROM_BUILD ? "../../../client/dist" : "../client/dist";
 
 app.use(cors());
 app.use(express.static(path.join(__dirname, clientDistFolder)));
