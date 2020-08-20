@@ -12,6 +12,10 @@ module.exports = {
       "error_file": "./pm2/logs/prod/error.log",
       "merge_logs": true,
       "combine_logs": true,
+      "env": {
+        "NODE_ENV": "production",
+        "FROM_BUILD": true
+      }
     }
   ]
 };
