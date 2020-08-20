@@ -46,7 +46,9 @@ export const LatencyPage = observer((): JSX.Element => {
 
   useEffect(() => {
     if (latencyStore.subscribedStreams.length === latencyStore.expectedSubscribePromises) {
-      scanQRCodes(canvasTest.current);
+      setTimeout(() => {
+        scanQRCodes(canvasTest.current);
+      }, 1000);
     }
   }, [latencyStore.subscribedStreams]);
 

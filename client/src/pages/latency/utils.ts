@@ -3,7 +3,7 @@ import { BrowserQRCodeReader, Result } from "@zxing/library";
 import * as html2canvas from "html2canvas";
 
 export const numericStyles = {
-  width: 200, height: 200, marginRight: 20, marginTop: 20,
+  width: 256, height: 256, marginRight: 20, marginTop: 20,
 };
 
 export const cssStyles = {
@@ -18,14 +18,14 @@ export const scanSingleQrCode = (
   position: number,
   newCanvas: HTMLCanvasElement,
 ): Promise<Result> => {
-  const imageContent = canvas.getContext("2d").getImageData(
-    position * (numericStyles.width + numericStyles.marginRight),
-    numericStyles.marginTop,
-    numericStyles.width,
-    numericStyles.height,
-  );
+  // const imageContent = canvas.getContext("2d").getImageData(
+  //   position * (numericStyles.width + numericStyles.marginRight),
+  //   numericStyles.marginTop,
+  //   numericStyles.width,
+  //   numericStyles.height,
+  // );
 
-  // const imageContent = canvas.getContext("2d").getImageData(0, 0, canvas.width, canvas.height);
+  const imageContent = canvas.getContext("2d").getImageData(0, 0, canvas.width, canvas.height);
 
   newCanvas.width = canvas.width;
   newCanvas.height = canvas.height;

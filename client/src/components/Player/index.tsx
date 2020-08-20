@@ -19,6 +19,7 @@ export const PlayerComponent = ({
   source, self, playback, width, height, disabledConrols, withBorder,
 }: TProps): JSX.Element => {
   const player = useRef<HTMLVideoElement>(null);
+  const canvas = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
     if (player.current && source) {
@@ -34,18 +35,36 @@ export const PlayerComponent = ({
       }
 
       player.current.play();
+      const context = canvas.current.getContext("2d");
+
+      player.current.addEventListener("play", () => {
+        setInterval(() => {
+          console.log(player.current.videoHeight);
+          console.log(player.current.videoWidth);
+          if (!player.current.paused && !player.current.ended) {
+            context.drawImage(
+              player.current, 0, 0,
+              player.current.videoWidth,
+              player.current.videoHeight,
+            );
+          }
+        }, 16.66);
+      });
     }
   }, [source, playback]);
 
   return (
-    <Video
-      ref={player}
-      controls={!self && !!source && !disabledConrols}
-      maxWidth={width}
-      height={height}
-      withBorder={withBorder}
-      playsInline
-      muted
-    />
+    <>
+      <Video
+        ref={player}
+        controls={!self && !!source && !disabledConrols}
+        maxWidth={width}
+        height={height}
+        withBorder={withBorder}
+        playsInline
+        muted
+      />
+      <canvas style={{ width: "256px", height: "256px" }} ref={canvas} />
+    </>
   );
 };

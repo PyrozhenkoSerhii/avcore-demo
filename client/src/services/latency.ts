@@ -102,6 +102,30 @@ class LatencyService {
       this.listenStream(published);
 
       this.publishedStream = published;
+
+      // const videoTrack = mediaStream.getVideoTracks()[0];
+
+      // videoTrack.applyConstraints({
+      //   width: { min: 640, ideal: 1280 },
+      //   height: { min: 480, ideal: 720 },
+      //   advanced: [
+      //     { width: 256, height: 256 },
+      //     { aspectRatio: 1 },
+      //   ],
+      // }).then(async () => {
+      //   await capture.publish(mediaStream);
+
+      //   const published: IPublishedStream = {
+      //     streamId,
+      //     server: publishingServer,
+      //     capture,
+      //     worker: publishingWorker,
+      //   };
+
+      //   this.listenStream(published);
+
+      //   this.publishedStream = published;
+      // });
     });
   }
 
