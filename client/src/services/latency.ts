@@ -1,6 +1,6 @@
 import { ConferenceApi } from "avcore/client/dist";
 import { createContext } from "react";
-import { observable, action, when } from "mobx";
+import { observable, action, autorun } from "mobx";
 import { forEach } from "lodash";
 import * as queryString from "query-string";
 import * as io from "socket.io-client";
@@ -50,6 +50,14 @@ class LatencyService {
 
   constructor() {
     this.socket = io(`${process.env.PROTOCOL}://${process.env.HOST}:${process.env.PORT}`);
+    autorun(
+      () => {
+        if (this.subscribedStreamsWithPromises.length === this.expectedSubscribePromises) {
+          const promises = this.subscribedStreamsWithPromises.map((item) => item.streamPromise);
+          this.resolvePromises(this.subscribedStreamsWithPromises, promises);
+        }
+      },
+    );
   }
 
   @action updateServersFromLocation = (searchString: string) => {
@@ -138,22 +146,16 @@ class LatencyService {
       subscribedStream.playback.close();
     });
     this.subscribedStreams = [];
+    this.subscribedStreamsWithPromises = [];
 
-    this.publishedStream.capture.close();
-    this.publishedStream = null;
+    if (this.publishedStream) {
+      this.publishedStream.capture.close();
+      this.publishedStream = null;
+    }
 
     this.expectedSubscribePromises = 1;
-
     this.updated = false;
   }
-
-  disposer = when(
-    () => this.subscribedStreamsWithPromises.length === this.expectedSubscribePromises,
-    async () => {
-      const promises = this.subscribedStreamsWithPromises.map((item) => item.streamPromise);
-      this.resolvePromises(this.subscribedStreamsWithPromises, promises);
-    },
-  )
 
   @action resolvePromises = async (
     data: Array<ISubscribedStreamWithPromise>,

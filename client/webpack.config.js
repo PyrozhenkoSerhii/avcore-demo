@@ -30,7 +30,7 @@ module.exports = {
     open: true,
     hot: true,
     host: "localhost",
-    port: 4000,
+    port: 4200,
   },
   plugins: [
     new Dotenv({
