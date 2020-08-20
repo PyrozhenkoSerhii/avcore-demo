@@ -1,12 +1,18 @@
 import styled from "styled-components";
 
-export const LatencyWrapper = styled.div`
+type TLatencyWrapperProps = {
+  marginRight: string;
+  marginTop: string;
+}
+
+export const LatencyWrapper = styled.div<TLatencyWrapperProps>`
   display: flex;
   flex-direction: row;
   width: 100%;
   height: 100%;
   
   & * {
-    margin: 20px;
+    margin-right: ${(props) => props.marginRight};
+    margin-top: ${(props) => props.marginTop};
   }
 `;

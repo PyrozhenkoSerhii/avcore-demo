@@ -7,11 +7,12 @@ import { Canvas } from "../../interfaces/canvas";
 import { latencyService } from "../../services/latency";
 import { PlayerComponent } from "../../components/Player";
 
+import { cssStyles, scanQRCodes } from "./utils";
 import { LatencyWrapper } from "./styled";
 
-const { useEffect, useState, useContext } = React;
-
-const styles = { width: "200px", height: "200px" };
+const {
+  useEffect, useState, useContext, useRef,
+} = React;
 
 /**
  * TODO: same params in router via mobx store
@@ -19,6 +20,7 @@ const styles = { width: "200px", height: "200px" };
 export const LatencyPage = observer((): JSX.Element => {
   const latencyStore = useContext(latencyService);
   const location = useLocation();
+  const canvasTest = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
     latencyStore.updateServersFromLocation(location.search);
@@ -42,20 +44,38 @@ export const LatencyPage = observer((): JSX.Element => {
     return () => latencyStore.clean();
   }, []);
 
-  return (
-    <LatencyWrapper>
-      <QRCode id="qrcode" style={styles} value={value} />
+  useEffect(() => {
+    if (latencyStore.subscribedStreams.length === latencyStore.expectedSubscribePromises) {
+      scanQRCodes(canvasTest.current);
+    }
+  }, [latencyStore.subscribedStreams]);
 
-      {latencyStore.subscribedStreams.map((subscribedStream) => (
-        <PlayerComponent
-          key={`${subscribedStream.server}${subscribedStream.worker}`}
-          height={styles.height}
-          width={styles.width}
-          source={subscribedStream.stream}
-          disabledConrols
-          withBorder
+  return (
+    <>
+      <LatencyWrapper
+        id="pageToCapture"
+        marginRight={cssStyles.marginRight}
+        marginTop={cssStyles.marginTop}
+      >
+
+        <QRCode
+          id="qrcode"
+          value={value}
+          style={{ width: cssStyles.width, height: cssStyles.height }}
         />
-      ))}
-    </LatencyWrapper>
+
+        {latencyStore.subscribedStreams.map((subscribedStream) => (
+          <PlayerComponent
+            key={`${subscribedStream.server}${subscribedStream.worker}`}
+            height={cssStyles.height}
+            width={cssStyles.width}
+            source={subscribedStream.stream}
+            disabledConrols
+            withBorder
+          />
+        ))}
+      </LatencyWrapper>
+      <canvas ref={canvasTest} />
+    </>
   );
 });
