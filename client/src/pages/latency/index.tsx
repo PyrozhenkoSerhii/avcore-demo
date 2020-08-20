@@ -5,7 +5,7 @@ import { useLocation } from "react-router-dom";
 
 import { Canvas } from "../../interfaces/canvas";
 import { latencyService } from "../../services/latency";
-import { PlayerComponent } from "../../components/Player";
+import { CanvasPlayerComponent } from "../../components/CanvasPlayer";
 
 import { cssStyles, scanQRCodes } from "./utils";
 import { LatencyWrapper } from "./styled";
@@ -14,9 +14,6 @@ const {
   useEffect, useState, useContext, useRef,
 } = React;
 
-/**
- * TODO: same params in router via mobx store
- */
 export const LatencyPage = observer((): JSX.Element => {
   const latencyStore = useContext(latencyService);
   const location = useLocation();
@@ -54,26 +51,27 @@ export const LatencyPage = observer((): JSX.Element => {
 
   return (
     <>
-      <LatencyWrapper
-        id="pageToCapture"
-        marginRight={cssStyles.marginRight}
-        marginTop={cssStyles.marginTop}
-      >
+      <LatencyWrapper id="pageToCapture">
 
         <QRCode
           id="qrcode"
           value={value}
-          style={{ width: cssStyles.width, height: cssStyles.height }}
+          style={{
+            width: cssStyles.width,
+            height: cssStyles.height,
+            marginRight: cssStyles.marginRight,
+          }}
         />
 
         {latencyStore.subscribedStreams.map((subscribedStream) => (
-          <PlayerComponent
+          <CanvasPlayerComponent
             key={`${subscribedStream.server}${subscribedStream.worker}`}
             height={cssStyles.height}
             width={cssStyles.width}
             source={subscribedStream.stream}
-            disabledConrols
             withBorder
+            withCanvas
+            subscribedStream={subscribedStream}
           />
         ))}
       </LatencyWrapper>

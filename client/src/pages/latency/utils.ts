@@ -2,15 +2,12 @@
 import { BrowserQRCodeReader, Result } from "@zxing/library";
 import * as html2canvas from "html2canvas";
 
-export const numericStyles = {
-  width: 256, height: 256, marginRight: 20, marginTop: 20,
-};
+export const numericStyles = { width: 256, height: 256, marginRight: 20 };
 
 export const cssStyles = {
   width: `${numericStyles.width}px`,
   height: `${numericStyles.height}px`,
   marginRight: `${numericStyles.marginRight}px`,
-  marginTop: `${numericStyles.marginTop}px`,
 };
 
 export const scanSingleQrCode = (
@@ -18,14 +15,14 @@ export const scanSingleQrCode = (
   position: number,
   newCanvas: HTMLCanvasElement,
 ): Promise<Result> => {
-  // const imageContent = canvas.getContext("2d").getImageData(
-  //   position * (numericStyles.width + numericStyles.marginRight),
-  //   numericStyles.marginTop,
-  //   numericStyles.width,
-  //   numericStyles.height,
-  // );
+  const imageContent = canvas.getContext("2d").getImageData(
+    position * (numericStyles.width + numericStyles.marginRight),
+    0,
+    numericStyles.width,
+    numericStyles.height,
+  );
 
-  const imageContent = canvas.getContext("2d").getImageData(0, 0, canvas.width, canvas.height);
+  // const imageContent = canvas.getContext("2d").getImageData(0, 0, canvas.width, canvas.height);
 
   newCanvas.width = canvas.width;
   newCanvas.height = canvas.height;
@@ -52,6 +49,6 @@ export const scanQRCodes = async (newCanvas: HTMLCanvasElement): Promise<void> =
 
   // const subscribedQrCodes = await Promise.all(subscribedQrCodesPromise);
 
-  console.log(`Origin qrcode time: ${originQrCode.getText()}`);
+  // console.log(`Origin qrcode time: ${originQrCode.getText()}`);
   // console.log(subscribedQrCodes);
 };
