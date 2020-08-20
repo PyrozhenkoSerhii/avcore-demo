@@ -12,10 +12,11 @@ type TProps = {
   width?: string;
   height?: string;
   disabledConrols?: boolean;
+  withBorder?: boolean;
 }
 
 export const PlayerComponent = ({
-  source, self, playback, width, height, disabledConrols,
+  source, self, playback, width, height, disabledConrols, withBorder,
 }: TProps): JSX.Element => {
   const player = useRef<HTMLVideoElement>(null);
 
@@ -42,6 +43,7 @@ export const PlayerComponent = ({
       controls={!self && !!source && !disabledConrols}
       maxWidth={width}
       height={height}
+      withBorder={withBorder}
       playsInline
       muted
     />

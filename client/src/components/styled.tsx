@@ -54,12 +54,14 @@ type TVideoElementProps = {
   fullSize?: boolean;
   maxWidth?: string;
   height?: string;
+  withBorder?: boolean;
 }
 
 export const Video = styled.video<TVideoElementProps>`
   width: ${(props) => (props.fullSize ? "100%" : "80%")};
   max-width: ${(props) => (props.maxWidth || "640px")};
   height: ${(props) => (props.height || "480px")};
+  border: ${(props) => (props.withBorder ? "1px dashed #494545" : "none")};
   margin-top: 10px;
 `;
 

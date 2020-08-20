@@ -53,6 +53,7 @@ export const LatencyPage = observer((): JSX.Element => {
           width={styles.width}
           source={subscribedStream.stream}
           disabledConrols
+          withBorder
         />
       ))}
     </LatencyWrapper>
