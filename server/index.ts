@@ -32,14 +32,6 @@ const app = express();
 
 const clientDistFolder = process.env.FROM_BUILD ? "../../client/dist" : "../client/dist";
 
-app.use(cors());
-
-
-app.use(express.static(path.join(__dirname, clientDistFolder)));
-app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, clientDistFolder, "index.html"));
-});
-
 const httpsServer = createServer(credentials, app);
 
 const io = socketIO(httpsServer);
@@ -84,4 +76,10 @@ io.on("connection", (socket: IExtSocket) => {
 
 httpsServer.listen(PORT, () => {
   console.log(`> HTTPS Server running on port ${PORT}`);
+});
+
+app.use(cors());
+app.use(express.static(path.join(__dirname, clientDistFolder)));
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, clientDistFolder, "index.html"));
 });
