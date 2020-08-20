@@ -34,44 +34,44 @@ const clientDistFolder = process.env.FROM_BUILD ? "../../client/dist" : "../clie
 
 const httpsServer = createServer(credentials, app);
 
-const io = socketIO(httpsServer);
+// const io = socketIO(httpsServer);
 
-io.on("connection", (socket: IExtSocket) => {
-  console.log("> Socket connection was established");
+// io.on("connection", (socket: IExtSocket) => {
+//   console.log("> Socket connection was established");
 
-  socket.on("auth", (data: TOnAuthProps, callback: TOnAuthCallback) => {
-    const {operation, stream} = data;
-    const token = jwt.sign({ stream, operation }, SECRET, { expiresIn: getExpiration(), algorithm: "HS512" });
+//   socket.on("auth", (data: TOnAuthProps, callback: TOnAuthCallback) => {
+//     const {operation, stream} = data;
+//     const token = jwt.sign({ stream, operation }, SECRET, { expiresIn: getExpiration(), algorithm: "HS512" });
 
-    console.log(`> Created token for stream: ${stream}, operation: ${operation}`);
+//     console.log(`> Created token for stream: ${stream}, operation: ${operation}`);
 
-    callback(token);
-  });
+//     callback(token);
+//   });
 
-  socket.on("save_mixer", (data: TOnSaveMixerProps) => {
-    const { mixerId, serverUrl, streamId } = data;
+//   socket.on("save_mixer", (data: TOnSaveMixerProps) => {
+//     const { mixerId, serverUrl, streamId } = data;
 
-    socket.mixerId = mixerId;
-    socket.streamId = streamId;
-    socket.serverUrl = serverUrl;
-  });
+//     socket.mixerId = mixerId;
+//     socket.streamId = streamId;
+//     socket.serverUrl = serverUrl;
+//   });
 
-  socket.on("disconnect", () => {
-    console.log("> Socket got disconnected!");
+//   socket.on("disconnect", () => {
+//     console.log("> Socket got disconnected!");
 
-    if(socket.mixerId) {
-      console.log("> Closing the mixer...");
-      const token = jwt.sign(
-        { stream: socket.streamId, operation: API_OPERATION.MIXER },
-        SECRET,
-        { expiresIn: getExpiration(), algorithm: "HS512" });
+//     if(socket.mixerId) {
+//       console.log("> Closing the mixer...");
+//       const token = jwt.sign(
+//         { stream: socket.streamId, operation: API_OPERATION.MIXER },
+//         SECRET,
+//         { expiresIn: getExpiration(), algorithm: "HS512" });
   
-      const api = new MediasoupSocketApi(socket.serverUrl, 0, token);
+//       const api = new MediasoupSocketApi(socket.serverUrl, 0, token);
   
-      api.mixerClose({ mixerId:socket.mixerId });
-    }
-  });
-});
+//       api.mixerClose({ mixerId:socket.mixerId });
+//     }
+//   });
+// });
 
 
 httpsServer.listen(PORT, () => {
