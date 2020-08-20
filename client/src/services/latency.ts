@@ -58,8 +58,8 @@ class LatencyService {
 
   @action publishCanvas = async (mediaStream: MediaStream) => {
     const streamId = shortId.generate();
-    const publishingServer = this.servers[1];
-    const publishingWorker = this.workers[1];
+    const publishingServer = this.servers[0];
+    const publishingWorker = this.workers[0];
 
     this.socket.emit("auth", { stream: streamId, operation: API_OPERATION.PUBLISH }, async (token: string) => {
       const capture = new ConferenceApi({
@@ -109,7 +109,6 @@ class LatencyService {
           });
 
           const incommingStream = await playback.subscribe();
-          console.log(incommingStream);
 
           const subscribed: ISubscribedStream = {
             server: subscribingServer,
