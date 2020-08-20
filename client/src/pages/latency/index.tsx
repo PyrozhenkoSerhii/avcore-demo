@@ -48,6 +48,7 @@ export const LatencyPage = observer((): JSX.Element => {
 
       {latencyStore.subscribedStreams.map((subscribedStream) => (
         <PlayerComponent
+          key={`${subscribedStream.server}${subscribedStream.worker}`}
           height={styles.height}
           width={styles.width}
           source={subscribedStream.stream}

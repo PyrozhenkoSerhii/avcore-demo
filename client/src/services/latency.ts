@@ -8,14 +8,14 @@ import * as shortId from "shortid";
 import { API_OPERATION } from "avcore";
 
 interface IPublishedStream {
-  url: string;
+  server: string;
   streamId: string;
   capture: ConferenceApi;
   worker: number;
 }
 
 interface ISubscribedStream {
-  url: string;
+  server: string;
   worker: number;
   streamId: string;
   playback: ConferenceApi;
@@ -33,7 +33,7 @@ class LatencyService {
 
   @observable socket: SocketIOClient.Socket = null;
 
-  @observable publishedStreams: Array<IPublishedStream> = [];
+  @observable publishedStream: IPublishedStream = null;
 
   @observable subscribedStreams: Array<ISubscribedStream> = [];
 
@@ -56,63 +56,71 @@ class LatencyService {
     this.updated = true;
   }
 
-  /**
-   * TODO: make parallel publishing
-   */
   @action publishCanvas = async (mediaStream: MediaStream) => {
-    this.servers.forEach((server) => {
-      const streamId = shortId.generate();
-      this.socket.emit("auth", { stream: streamId, operation: API_OPERATION.PUBLISH }, async (token: string) => {
-        const capture = new ConferenceApi({
-          kinds: this.kinds,
-          url: server,
-          worker: this.workers[0],
-          stream: streamId,
-          token,
-        });
+    const streamId = shortId.generate();
+    const publishingServer = this.servers[1];
+    const publishingWorker = this.workers[1];
 
-        await capture.publish(mediaStream);
-
-        const published: IPublishedStream = {
-          streamId,
-          url: server,
-          capture,
-          worker: this.workers[0],
-        };
-
-        this.listenStream(published);
-
-        this.publishedStreams.push(published);
+    this.socket.emit("auth", { stream: streamId, operation: API_OPERATION.PUBLISH }, async (token: string) => {
+      const capture = new ConferenceApi({
+        kinds: this.kinds,
+        url: publishingServer,
+        worker: publishingWorker,
+        stream: streamId,
+        token,
       });
+
+      await capture.publish(mediaStream);
+
+      console.log(`Publishing to ${publishingServer}[${publishingWorker}]`);
+
+      const published: IPublishedStream = {
+        streamId,
+        server: publishingServer,
+        capture,
+        worker: publishingWorker,
+      };
+
+      this.listenStream(published);
+
+      this.publishedStream = published;
     });
   }
 
-  @action listenStream = async ({ streamId, url, worker: publishingWorker }: IPublishedStream) => {
-    this.workers.forEach((subscribingWorker) => {
-      this.socket.emit("auth", { stream: streamId, operation: API_OPERATION.SUBSCRIBE }, async (token: string) => {
-        const playback = new ConferenceApi({
-          kinds: this.kinds,
-          url,
-          worker: subscribingWorker,
-          stream: streamId,
-          token,
-          origin: {
-            url,
-            worker: publishingWorker,
-          },
+  @action listenStream = async ({
+    streamId,
+    server: originServer,
+    worker: originWorker,
+  }: IPublishedStream) => {
+    this.servers.forEach((subscribingServer) => {
+      this.workers.forEach((subscribingWorker) => {
+        console.log(`Subscribing to ${originServer}[${originWorker}] from ${subscribingServer}[${subscribingWorker}]`);
+        this.socket.emit("auth", { stream: streamId, operation: API_OPERATION.SUBSCRIBE }, async (token: string) => {
+          const playback = new ConferenceApi({
+            kinds: this.kinds,
+            url: subscribingServer,
+            worker: subscribingWorker,
+            stream: streamId,
+            token,
+            origin: {
+              url: originServer,
+              worker: originWorker,
+            },
+          });
+
+          const incommingStream = await playback.subscribe();
+          console.log(incommingStream);
+
+          const subscribed: ISubscribedStream = {
+            server: subscribingServer,
+            streamId,
+            playback,
+            stream: incommingStream,
+            worker: subscribingWorker,
+          };
+
+          this.subscribedStreams.push(subscribed);
         });
-
-        const incommingStream = await playback.subscribe();
-
-        const subscribed: ISubscribedStream = {
-          url,
-          streamId,
-          playback,
-          stream: incommingStream,
-          worker: subscribingWorker,
-        };
-
-        this.subscribedStreams.push(subscribed);
       });
     });
   }
@@ -123,11 +131,9 @@ class LatencyService {
     });
     this.subscribedStreams = [];
 
-    this.publishedStreams.forEach((publishedStream) => {
-      publishedStream.capture.close();
-    });
+    this.publishedStream.capture.close();
+    this.publishedStream = null;
 
-    this.publishedStreams = [];
     this.updated = false;
   }
 }
