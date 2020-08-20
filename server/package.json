@@ -11,7 +11,7 @@
   },
   "betterScripts": {
     "dev": {
-      "command": "nodemon -r dotenv/config ./index.ts",
+      "command": "nodemon ./index.ts",
       "env": {
         "NODE_ENV": "development"
       }

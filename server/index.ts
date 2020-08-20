@@ -34,14 +34,10 @@ const clientDistFolder = process.env.FROM_BUILD ? "../../client/dist" : "../clie
 
 app.use(cors());
 
+
 app.use(express.static(path.join(__dirname, clientDistFolder)));
-
-if(process.env.NODE_ENV === "production") {
-  app.use("*", express.static(path.join(__dirname, clientDistFolder)));
-}
-
 app.get("*", (req, res) => {
-  res.sendFile(path.resolve(__dirname, clientDistFolder, "index.html"));
+  res.sendFile(path.join(__dirname, clientDistFolder, "index.html"));
 });
 
 const httpsServer = createServer(credentials, app);
