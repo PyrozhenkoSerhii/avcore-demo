@@ -19,14 +19,13 @@ interface ISubscribedStream {
   worker: number;
   streamId: string;
   playback: ConferenceApi;
+}
+
+interface ISubscribedStreamWithMedia extends ISubscribedStream {
   stream: MediaStream;
 }
 
-interface ISubscribedStreamWithPromise {
-  server: string;
-  worker: number;
-  streamId: string;
-  playback: ConferenceApi;
+interface ISubscribedStreamWithPromise extends ISubscribedStream {
   streamPromise: Promise<MediaStream>;
 }
 
@@ -37,17 +36,17 @@ class LatencyService {
 
   @observable kinds: Array<"video"|"audio"> = ["video"]
 
+  @observable expectedSubscribePromises = 1;
+
   @observable updated = false;
 
   @observable socket: SocketIOClient.Socket = null;
 
   @observable publishedStream: IPublishedStream = null;
 
-  @observable subscribedStreams: Array<ISubscribedStream> = [];
+  @observable subscribedStreams: Array<ISubscribedStreamWithMedia> = [];
 
   @observable subscribedStreamsWithPromises: Array<ISubscribedStreamWithPromise> = [];
-
-  @observable awaitedConnections = 1;
 
   constructor() {
     this.socket = io(`${process.env.PROTOCOL}://${process.env.HOST}:${process.env.PORT}`);
@@ -65,7 +64,7 @@ class LatencyService {
       }
     });
 
-    this.awaitedConnections = this.servers.length * this.workers.length;
+    this.expectedSubscribePromises = this.servers.length * this.workers.length;
     this.updated = true;
   }
 
@@ -98,14 +97,14 @@ class LatencyService {
     });
   }
 
-  @action listenStream = async ({
+  @action listenStream = ({
     streamId,
     server: originServer,
     worker: originWorker,
   }: IPublishedStream) => {
     this.servers.forEach((subscribingServer) => {
       this.workers.forEach((subscribingWorker) => {
-        this.socket.emit("auth", { stream: streamId, operation: API_OPERATION.SUBSCRIBE }, async (token: string) => {
+        this.socket.emit("auth", { stream: streamId, operation: API_OPERATION.SUBSCRIBE }, (token: string) => {
           const playback = new ConferenceApi({
             kinds: this.kinds,
             url: subscribingServer,
@@ -134,7 +133,7 @@ class LatencyService {
     });
   }
 
-  @action clean = async () => {
+  @action clean = () => {
     this.subscribedStreams.forEach((subscribedStream) => {
       subscribedStream.playback.close();
     });
@@ -143,11 +142,13 @@ class LatencyService {
     this.publishedStream.capture.close();
     this.publishedStream = null;
 
+    this.expectedSubscribePromises = 1;
+
     this.updated = false;
   }
 
   disposer = when(
-    () => this.subscribedStreamsWithPromises.length === this.awaitedConnections,
+    () => this.subscribedStreamsWithPromises.length === this.expectedSubscribePromises,
     async () => {
       const promises = this.subscribedStreamsWithPromises.map((item) => item.streamPromise);
       this.resolvePromises(this.subscribedStreamsWithPromises, promises);
@@ -160,7 +161,7 @@ class LatencyService {
   ) => {
     const streams = await Promise.all(promises);
 
-    const subscribedStreams = streams.map<ISubscribedStream>((stream, index) => ({
+    const subscribedStreams = streams.map<ISubscribedStreamWithMedia>((stream, index) => ({
       server: data[index].server,
       streamId: data[index].streamId,
       playback: data[index].playback,
