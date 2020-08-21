@@ -1,13 +1,7 @@
-/* eslint-disable no-param-reassign */
-import { BrowserQRCodeReader, Result } from "@zxing/library";
 import {
-  MultiFormatReader,
-  BarcodeFormat,
-  DecodeHintType,
-  RGBLuminanceSource,
-  BinaryBitmap,
-  HybridBinarizer,
-} from "@zxing/library/esm5";
+  BrowserQRCodeReader, Result, QRCodeReader, BinaryBitmap,
+  BarcodeFormat, DecodeHintType, RGBLuminanceSource, HybridBinarizer,
+} from "@zxing/library";
 import * as html2canvas from "html2canvas";
 import { Decoder } from "@nuintun/qrcode";
 
@@ -50,51 +44,42 @@ const scanQRCodeFromImage = async (img: string): Promise<string> => {
   return result.data;
 };
 
-const scanQRCodeFromImageZXing = async (img: string): Promise<Result> => {
+const scanQRCodeFromImageZXing = async (img: HTMLImageElement): Promise<Result> => {
   const reader = new BrowserQRCodeReader();
 
   let read = null;
   try {
-    read = reader.decodeFromImageUrl(img);
+    read = reader.decodeFromImage(img);
   } catch (err) {
     console.error("Reader decodeFromImageUrl error: ", err);
   }
-  console.log(read);
   return read;
 };
 
-const scanQRCodeFromBinaryZXing = async (buffer: ArrayBuffer): Promise<Result> => {
+const scanQRCodeFromBinaryZXing = async (buffer: Uint8ClampedArray): Promise<Result> => {
   const hints = new Map();
   const formats = [BarcodeFormat.QR_CODE, BarcodeFormat.DATA_MATRIX];
 
   hints.set(DecodeHintType.POSSIBLE_FORMATS, formats);
-
-  const reader = new MultiFormatReader();
-
-  reader.setHints(hints);
+  hints.set(DecodeHintType.TRY_HARDER, true);
+  hints.set(DecodeHintType.PURE_BARCODE, true);
 
   const luminanceSource = new RGBLuminanceSource(
-    new Uint8ClampedArray(buffer),
-    numericStyles.width + 10, numericStyles.height,
+    buffer, numericStyles.width + 10, numericStyles.height,
   );
 
   const binaryBitmap = new BinaryBitmap(new HybridBinarizer(luminanceSource));
 
-  let result = null;
-  try {
-    result = await reader.decode(binaryBitmap);
-  } catch (e) {
-    console.error(e);
-  }
-  return result;
+  const reader = new QRCodeReader();
+  return reader.decode(binaryBitmap);
 };
 
-const scanCanvasChunk = async (canvas: HTMLCanvasElement, position: number): Promise<string> => {
+const scanCanvasChunk = async (canvas: HTMLCanvasElement, position: number): Promise<Result> => {
   const imageContent = canvas.getContext("2d").getImageData(
     position * (numericStyles.width + numericStyles.marginRight),
     0,
     numericStyles.width + 10,
-    numericStyles.height,
+    numericStyles.height + 10,
   );
 
   const newCanvas = document.createElement("canvas");
@@ -104,14 +89,16 @@ const scanCanvasChunk = async (canvas: HTMLCanvasElement, position: number): Pro
 
   newCanvas.getContext("2d").putImageData(imageContent, 0, 0);
 
-  const img = newCanvas.toDataURL("image/png");
+  const imgURL = newCanvas.toDataURL("image/png");
 
-  scanQRCodeFromImageZXing(img);
+  const image = new Image();
+  image.src = imgURL;
 
-  const { buffer } = imageContent.data;
-  scanQRCodeFromBinaryZXing(buffer);
+  return scanQRCodeFromImageZXing(image);
 
-  return scanQRCodeFromImage(img);
+  // scanQRCodeFromBinaryZXing(imageContent.data);
+
+  // return scanQRCodeFromImage(img);
 };
 
 export const scanQRCodes = async (
@@ -122,7 +109,7 @@ export const scanQRCodes = async (
     const originQrCode = await scanCanvasChunk(canvas, 0);
     const originTimeMap: ITimeMap = {
       name: "origin",
-      time: Number(originQrCode),
+      time: Number(originQrCode.getText()),
     };
 
     /**
@@ -137,7 +124,7 @@ export const scanQRCodes = async (
 
     const recievedTimeMaps = recievedQrCodes.map<ITimeMap>((result, index) => ({
       name: `${subscribedStreams[index].server}[${subscribedStreams[index].worker}]`,
-      time: Number(result),
+      time: Number(result.getText()),
     }));
 
     calculateDifference(originTimeMap, recievedTimeMaps);
