@@ -1,6 +1,6 @@
 *id_rsa*
 node_modules
 .env
-dist
+server/dist
 *.pem*
 *.log*
