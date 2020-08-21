@@ -10,14 +10,11 @@ import { CanvasPlayerComponent } from "../../components/CanvasPlayer";
 import { cssStyles, scanQRCodes } from "./utils";
 import { LatencyWrapper } from "./styled";
 
-const {
-  useEffect, useState, useContext, useRef,
-} = React;
+const { useEffect, useState, useContext } = React;
 
 export const LatencyPage = observer((): JSX.Element => {
   const latencyStore = useContext(latencyService);
   const location = useLocation();
-  const canvasTest = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
     latencyStore.updateServersFromLocation(location.search);
@@ -42,12 +39,18 @@ export const LatencyPage = observer((): JSX.Element => {
   }, []);
 
   useEffect(() => {
-    if (latencyStore.subscribedStreams.length === latencyStore.expectedSubscribePromises) {
-      setTimeout(() => {
-        scanQRCodes(canvasTest.current);
+    let interval = null;
+    if (latencyStore.activePlayersCount === latencyStore.expectedSubscribePromises) {
+      interval = setInterval(() => {
+        scanQRCodes(latencyStore.subscribedStreams);
       }, 1000);
     }
-  }, [latencyStore.subscribedStreams]);
+    return () => {
+      if (interval) {
+        clearInterval(interval);
+      }
+    };
+  }, [latencyStore.activePlayersCount]);
 
   return (
     <>
@@ -75,7 +78,6 @@ export const LatencyPage = observer((): JSX.Element => {
           />
         ))}
       </LatencyWrapper>
-      <canvas ref={canvasTest} />
     </>
   );
 });

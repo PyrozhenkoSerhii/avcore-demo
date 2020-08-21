@@ -1,6 +1,7 @@
 /* eslint-disable no-param-reassign */
 import { BrowserQRCodeReader, Result } from "@zxing/library";
 import * as html2canvas from "html2canvas";
+import { ISubscribedStreamWithMedia } from "../../services/latency";
 
 export const numericStyles = { width: 256, height: 256, marginRight: 20 };
 
@@ -10,11 +11,29 @@ export const cssStyles = {
   marginRight: `${numericStyles.marginRight}px`,
 };
 
-export const scanSingleQrCode = (
-  canvas: HTMLCanvasElement,
-  position: number,
-  newCanvas: HTMLCanvasElement,
-): Promise<Result> => {
+interface ITimeMap {
+  name: string;
+  time: number;
+}
+
+interface ITimeDiff {
+  name: string;
+  difference: string;
+}
+
+const calculateDifference = (origin: ITimeMap, recieved: Array<ITimeMap>) => {
+  const diff = recieved.map<ITimeDiff>((item) => ({
+    ...item,
+    difference: `+${origin.time - item.time}ms`,
+  }));
+
+  console.table([{
+    name: origin.name,
+    difference: "+0ms",
+  }, ...diff]);
+};
+
+const scanSingleQrCode = (canvas: HTMLCanvasElement, position: number): Promise<Result> => {
   const imageContent = canvas.getContext("2d").getImageData(
     position * (numericStyles.width + numericStyles.marginRight),
     0,
@@ -22,7 +41,7 @@ export const scanSingleQrCode = (
     numericStyles.height,
   );
 
-  // const imageContent = canvas.getContext("2d").getImageData(0, 0, canvas.width, canvas.height);
+  const newCanvas = document.createElement("canvas");
 
   newCanvas.width = canvas.width;
   newCanvas.height = canvas.height;
@@ -35,20 +54,30 @@ export const scanSingleQrCode = (
   return reader.decodeFromImageUrl(img);
 };
 
-export const scanQRCodes = async (newCanvas: HTMLCanvasElement): Promise<void> => {
+export const scanQRCodes = async (
+  subscribedStreams: Array<ISubscribedStreamWithMedia>,
+): Promise<void> => {
   const canvas = await html2canvas(document.querySelector("#pageToCapture"), { allowTaint: true, useCORS: true, logging: true });
-  const originQrCode = await scanSingleQrCode(canvas, 0, newCanvas);
+  const originQrCode = await scanSingleQrCode(canvas, 0);
+  const originTimeMap: ITimeMap = {
+    name: "origin",
+    time: Number(originQrCode.getText()),
+  };
 
   /**
    * Since the first element on canvas is an origin stream
    * all the subscribed streams starts from second element
    */
-  // const subscribedQrCodesPromise = latencyStore.subscribedStreams.map(
-  //   (stream, index) => scanSingleQrCode(canvas, index + 1),
-  // );
+  const recievedQrCodesPromise = subscribedStreams.map(
+    (stream, index) => scanSingleQrCode(canvas, index + 1),
+  );
 
-  // const subscribedQrCodes = await Promise.all(subscribedQrCodesPromise);
+  const recievedQrCodes = await Promise.all(recievedQrCodesPromise);
 
-  // console.log(`Origin qrcode time: ${originQrCode.getText()}`);
-  // console.log(subscribedQrCodes);
+  const recievedTimeMaps = recievedQrCodes.map<ITimeMap>((result, index) => ({
+    name: `${subscribedStreams[index].server}[${subscribedStreams[index].worker}]`,
+    time: Number(result.getText()),
+  }));
+
+  calculateDifference(originTimeMap, recievedTimeMaps);
 };

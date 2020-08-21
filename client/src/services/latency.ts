@@ -48,6 +48,8 @@ class LatencyService {
 
   @observable subscribedStreamsWithPromises: Array<ISubscribedStreamWithPromise> = [];
 
+  @observable activePlayersCount = 0;
+
   constructor() {
     this.socket = io(`${process.env.PROTOCOL}://${process.env.HOST}:${process.env.PORT}`);
     autorun(
@@ -154,6 +156,7 @@ class LatencyService {
     }
 
     this.expectedSubscribePromises = 1;
+    this.activePlayersCount = 0;
     this.updated = false;
   }
 
@@ -172,6 +175,10 @@ class LatencyService {
     }));
 
     this.subscribedStreams = subscribedStreams;
+  }
+
+  @action setPlayerActive = () => {
+    this.activePlayersCount += 1;
   }
 }
 

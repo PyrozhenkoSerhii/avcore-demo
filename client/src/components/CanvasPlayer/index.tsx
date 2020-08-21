@@ -4,9 +4,9 @@ import * as React from "react";
 import { numericStyles, cssStyles } from "../../pages/latency/utils";
 import { Video } from "../styled";
 import { Canvas, PlayerWrapper } from "./styled";
-import { ISubscribedStreamWithMedia } from "../../services/latency";
+import { ISubscribedStreamWithMedia, latencyService } from "../../services/latency";
 
-const { useRef, useEffect } = React;
+const { useRef, useEffect, useContext } = React;
 
 type TProps = {
   source: MediaStream;
@@ -22,6 +22,7 @@ export const CanvasPlayerComponent = ({
 }: TProps): JSX.Element => {
   const player = useRef<HTMLVideoElement>(null);
   const canvas = useRef<HTMLCanvasElement>(null);
+  const latencyStore = useContext(latencyService);
 
   useEffect(() => {
     if (player.current && source) {
@@ -32,8 +33,20 @@ export const CanvasPlayerComponent = ({
         const context = canvas.current.getContext("2d");
 
         player.current.addEventListener("play", () => {
+          const checkVideoSignal = () => {
+            if (player.current.videoWidth) {
+              latencyStore.setPlayerActive();
+            } else {
+              setTimeout(() => {
+                checkVideoSignal();
+              }, 100);
+            }
+          };
+
+          checkVideoSignal();
+
           setInterval(() => {
-            if (!player.current.paused && !player.current.ended) {
+            if (player.current && !player.current.paused && !player.current.ended) {
               context.drawImage(
                 player.current,
                 0, 0, player.current.videoHeight, player.current.videoWidth,
