@@ -5,7 +5,7 @@ import {
 import * as html2canvas from "html2canvas";
 import { Decoder } from "@nuintun/qrcode";
 
-import { ISubscribedStreamWithMedia } from "../../services/latency";
+import { ISubscribedStreamWithMedia, IPublishedStream } from "../../services/latency";
 
 export const numericStyles = { width: 256, height: 256, marginRight: 20 };
 
@@ -26,15 +26,9 @@ interface ITimeDiff {
 }
 
 const calculateDifference = (origin: ITimeMap, recieved: Array<ITimeMap>) => {
-  const diff = recieved.map<ITimeDiff>((item) => ({
-    name: item.name,
-    difference: `+${origin.time - item.time}ms`,
-  }));
-
-  console.table([{
-    name: origin.name,
-    difference: "+0ms",
-  }, ...diff]);
+  recieved.forEach((item) => {
+    console.log(`_LATENCY_ ${origin.time - item.time}ms from ${item.name} to ${origin.name}`);
+  });
 };
 
 const scanQRCodeFromImage = async (img: string): Promise<string> => {
@@ -105,14 +99,15 @@ const scanCanvasChunk = (canvas: HTMLCanvasElement, position: number): Promise<s
 
 export const scanQRCodes = async (
   subscribedStreams: Array<ISubscribedStreamWithMedia>,
+  publishedStream: IPublishedStream,
 ): Promise<void> => {
   const canvas = await html2canvas(document.querySelector("#pageToCapture"), { allowTaint: true, useCORS: true, logging: true });
 
   try {
-    console.log("attempt to scan qr code for origin");
+    console.log(`Attempt to scan qr code for origin (${publishedStream.server}[${publishedStream.worker}])`);
     const originQrCode = await scanCanvasChunk(canvas, 0);
     const originTimeMap: ITimeMap = {
-      name: "origin",
+      name: `${publishedStream.server}[${publishedStream.worker}]`,
       time: Number(originQrCode),
     };
 
@@ -128,7 +123,7 @@ export const scanQRCodes = async (
     );
 
     try {
-      console.log("resolving scan promises for recieved qr codes");
+      console.log("Resolving scan promises for recieved qr codes");
       const recievedQrCodes = await Promise.all(recievedQrCodesPromise);
 
       const recievedTimeMaps = recievedQrCodes.map<ITimeMap>((result, index) => ({

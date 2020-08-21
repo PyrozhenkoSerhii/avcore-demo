@@ -7,7 +7,7 @@ import * as io from "socket.io-client";
 import * as shortId from "shortid";
 import { API_OPERATION } from "avcore";
 
-interface IPublishedStream {
+export interface IPublishedStream {
   server: string;
   streamId: string;
   capture: ConferenceApi;

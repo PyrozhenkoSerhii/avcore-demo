@@ -22,7 +22,7 @@ export const LatencyPage = observer((): JSX.Element => {
     let interval = null;
     if (latencyStore.activePlayersCount === latencyStore.expectedSubscribePromises) {
       interval = setInterval(() => {
-        scanQRCodes(latencyStore.subscribedStreams);
+        scanQRCodes(latencyStore.subscribedStreams, latencyStore.publishedStream);
       }, 1000);
     }
     return () => {
