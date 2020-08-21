@@ -1,6 +1,7 @@
 /* eslint-disable no-param-reassign */
 import { BrowserQRCodeReader, Result } from "@zxing/library";
 import * as html2canvas from "html2canvas";
+import { Decoder } from "@nuintun/qrcode";
 import { ISubscribedStreamWithMedia } from "../../services/latency";
 
 export const numericStyles = { width: 256, height: 256, marginRight: 20 };
@@ -33,11 +34,11 @@ const calculateDifference = (origin: ITimeMap, recieved: Array<ITimeMap>) => {
   }, ...diff]);
 };
 
-const scanSingleQrCode = (canvas: HTMLCanvasElement, position: number): Promise<Result> => {
+const scanSingleQrCode = async (canvas: HTMLCanvasElement, position: number): Promise<string> => {
   const imageContent = canvas.getContext("2d").getImageData(
     position * (numericStyles.width + numericStyles.marginRight),
     0,
-    numericStyles.width,
+    numericStyles.width + 10,
     numericStyles.height,
   );
 
@@ -48,16 +49,25 @@ const scanSingleQrCode = (canvas: HTMLCanvasElement, position: number): Promise<
 
   newCanvas.getContext("2d").putImageData(imageContent, 0, 0);
 
-  const reader = new BrowserQRCodeReader();
   const img = newCanvas.toDataURL("image/png");
 
-  let read = null;
-  try {
-    read = reader.decodeFromImageUrl(img);
-  } catch (err) {
-    console.log("Reader decodeFromImageUrl error: ", err);
-  }
-  return read;
+  // const reader = new BrowserQRCodeReader();
+
+  // let read = null;
+  // try {
+  //   read = reader.decodeFromImageUrl(img);
+  // } catch (err) {
+  //   console.log("Reader decodeFromImageUrl error: ", err);
+  // }
+
+  const decoder = new Decoder();
+  decoder.setOptions({ inversionAttempts: "attemptBoth" });
+  const result = await decoder.scan(img);
+  return result.data;
+
+  // document.body.appendChild(newCanvas);
+  // newCanvas.style.border = "1px solid red";
+  // return read;
 };
 
 export const scanQRCodes = async (
@@ -68,7 +78,7 @@ export const scanQRCodes = async (
     const originQrCode = await scanSingleQrCode(canvas, 0);
     const originTimeMap: ITimeMap = {
       name: "origin",
-      time: Number(originQrCode.getText()),
+      time: Number(originQrCode),
     };
 
     /**
@@ -83,7 +93,7 @@ export const scanQRCodes = async (
 
     const recievedTimeMaps = recievedQrCodes.map<ITimeMap>((result, index) => ({
       name: `${subscribedStreams[index].server}[${subscribedStreams[index].worker}]`,
-      time: Number(result.getText()),
+      time: Number(result),
     }));
 
     calculateDifference(originTimeMap, recievedTimeMaps);
