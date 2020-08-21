@@ -44,16 +44,18 @@ const scanQRCodeFromImage = async (img: string): Promise<string> => {
   return result.data;
 };
 
-const scanQRCodeFromImageZXing = async (img: HTMLImageElement): Promise<Result> => {
+const scanQRCodeFromImageZXing = async (img: HTMLImageElement): Promise<string> => {
   const reader = new BrowserQRCodeReader();
 
-  let read = null;
+  console.log("Scanning begins...");
   try {
-    read = reader.decodeFromImage(img);
+    const read = await reader.decodeFromImage(img);
+    console.log("Scanning ends with value", read.getText());
+    return read.getText();
   } catch (err) {
-    console.error("Reader decodeFromImageUrl error: ", err);
+    console.log("Error while scanning: ", err);
+    return "";
   }
-  return read;
 };
 
 const scanQRCodeFromBinaryZXing = async (buffer: Uint8ClampedArray): Promise<Result> => {
@@ -74,7 +76,7 @@ const scanQRCodeFromBinaryZXing = async (buffer: Uint8ClampedArray): Promise<Res
   return reader.decode(binaryBitmap);
 };
 
-const scanCanvasChunk = async (canvas: HTMLCanvasElement, position: number): Promise<Result> => {
+const scanCanvasChunk = (canvas: HTMLCanvasElement, position: number): Promise<string> => {
   const imageContent = canvas.getContext("2d").getImageData(
     position * (numericStyles.width + numericStyles.marginRight),
     0,
@@ -104,12 +106,14 @@ const scanCanvasChunk = async (canvas: HTMLCanvasElement, position: number): Pro
 export const scanQRCodes = async (
   subscribedStreams: Array<ISubscribedStreamWithMedia>,
 ): Promise<void> => {
+  const canvas = await html2canvas(document.querySelector("#pageToCapture"), { allowTaint: true, useCORS: true, logging: true });
+
   try {
-    const canvas = await html2canvas(document.querySelector("#pageToCapture"), { allowTaint: true, useCORS: true, logging: true });
+    console.log("attempt to scan qr code for origin");
     const originQrCode = await scanCanvasChunk(canvas, 0);
     const originTimeMap: ITimeMap = {
       name: "origin",
-      time: Number(originQrCode.getText()),
+      time: Number(originQrCode),
     };
 
     /**
@@ -117,18 +121,26 @@ export const scanQRCodes = async (
    * all the subscribed streams starts from second element
    */
     const recievedQrCodesPromise = subscribedStreams.map(
-      (stream, index) => scanCanvasChunk(canvas, index + 1),
+      (stream, index) => {
+        console.log(`Attempt to scan code for ${stream.server}[${stream.worker}]`);
+        return scanCanvasChunk(canvas, index + 1);
+      },
     );
 
-    const recievedQrCodes = await Promise.all(recievedQrCodesPromise);
+    try {
+      console.log("resolving scan promises for recieved qr codes");
+      const recievedQrCodes = await Promise.all(recievedQrCodesPromise);
 
-    const recievedTimeMaps = recievedQrCodes.map<ITimeMap>((result, index) => ({
-      name: `${subscribedStreams[index].server}[${subscribedStreams[index].worker}]`,
-      time: Number(result.getText()),
-    }));
+      const recievedTimeMaps = recievedQrCodes.map<ITimeMap>((result, index) => ({
+        name: `${subscribedStreams[index].server}[${subscribedStreams[index].worker}]`,
+        time: Number(result),
+      }));
 
-    calculateDifference(originTimeMap, recievedTimeMaps);
+      calculateDifference(originTimeMap, recievedTimeMaps);
+    } catch (err) {
+      console.log("Error while resolving scan promises for recieved qr codes", err);
+    }
   } catch (err) {
-    console.log("ScanQRCodes error: ", err);
+    console.log("Error while resolving scan promises for origin qr codes", err);
   }
 };
