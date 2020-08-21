@@ -23,7 +23,7 @@ interface ITimeDiff {
 
 const calculateDifference = (origin: ITimeMap, recieved: Array<ITimeMap>) => {
   const diff = recieved.map<ITimeDiff>((item) => ({
-    ...item,
+    name: item.name,
     difference: `+${origin.time - item.time}ms`,
   }));
 
@@ -51,33 +51,43 @@ const scanSingleQrCode = (canvas: HTMLCanvasElement, position: number): Promise<
   const reader = new BrowserQRCodeReader();
   const img = newCanvas.toDataURL("image/png");
 
-  return reader.decodeFromImageUrl(img);
+  let read = null;
+  try {
+    read = reader.decodeFromImageUrl(img);
+  } catch (err) {
+    console.log("Reader decodeFromImageUrl error: ", err);
+  }
+  return read;
 };
 
 export const scanQRCodes = async (
   subscribedStreams: Array<ISubscribedStreamWithMedia>,
 ): Promise<void> => {
-  const canvas = await html2canvas(document.querySelector("#pageToCapture"), { allowTaint: true, useCORS: true, logging: true });
-  const originQrCode = await scanSingleQrCode(canvas, 0);
-  const originTimeMap: ITimeMap = {
-    name: "origin",
-    time: Number(originQrCode.getText()),
-  };
+  try {
+    const canvas = await html2canvas(document.querySelector("#pageToCapture"), { allowTaint: true, useCORS: true, logging: true });
+    const originQrCode = await scanSingleQrCode(canvas, 0);
+    const originTimeMap: ITimeMap = {
+      name: "origin",
+      time: Number(originQrCode.getText()),
+    };
 
-  /**
+    /**
    * Since the first element on canvas is an origin stream
    * all the subscribed streams starts from second element
    */
-  const recievedQrCodesPromise = subscribedStreams.map(
-    (stream, index) => scanSingleQrCode(canvas, index + 1),
-  );
+    const recievedQrCodesPromise = subscribedStreams.map(
+      (stream, index) => scanSingleQrCode(canvas, index + 1),
+    );
 
-  const recievedQrCodes = await Promise.all(recievedQrCodesPromise);
+    const recievedQrCodes = await Promise.all(recievedQrCodesPromise);
 
-  const recievedTimeMaps = recievedQrCodes.map<ITimeMap>((result, index) => ({
-    name: `${subscribedStreams[index].server}[${subscribedStreams[index].worker}]`,
-    time: Number(result.getText()),
-  }));
+    const recievedTimeMaps = recievedQrCodes.map<ITimeMap>((result, index) => ({
+      name: `${subscribedStreams[index].server}[${subscribedStreams[index].worker}]`,
+      time: Number(result.getText()),
+    }));
 
-  calculateDifference(originTimeMap, recievedTimeMaps);
+    calculateDifference(originTimeMap, recievedTimeMaps);
+  } catch (err) {
+    console.log("ScanQRCodes error: ", err);
+  }
 };
