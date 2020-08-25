@@ -1,9 +1,13 @@
 import styled from "styled-components";
 
-export const LatencyWrapper = styled.div`
+type TLatencyWrapperProps = {
+  width: number;
+}
+
+export const LatencyWrapper = styled.div<TLatencyWrapperProps>`
   display: flex;
   flex-direction: row;
-  width: 100%;
+  width: ${(props) => `${props.width}px`};
   height: 100%;
   margin: 30px;
   padding-bottom: 20px;

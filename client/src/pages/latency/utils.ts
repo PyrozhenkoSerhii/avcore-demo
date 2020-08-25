@@ -7,7 +7,7 @@ import { Decoder } from "@nuintun/qrcode";
 
 import { ISubscribedStreamWithMedia, IPublishedStream } from "../../services/latency";
 
-export const numericStyles = { width: 256, height: 256, marginRight: 20 };
+export const numericStyles = { width: 50, height: 50, marginRight: 10 };
 
 export const cssStyles = {
   width: `${numericStyles.width}px`,

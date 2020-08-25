@@ -6,10 +6,12 @@ import { Canvas } from "../../../interfaces/canvas";
 import { latencyService } from "../../../services/latency";
 import { CanvasPlayerComponent } from "../../../components/CanvasPlayer";
 
-import { cssStyles } from "../utils";
+import { cssStyles, numericStyles } from "../utils";
 import { LatencyWrapper } from "./styled";
 
-const { useEffect, useState, useContext } = React;
+const {
+  useEffect, useState, useContext, useMemo,
+} = React;
 
 export const LatencyComponent = observer(() => {
   const latencyStore = useContext(latencyService);
@@ -31,8 +33,14 @@ export const LatencyComponent = observer(() => {
     return () => latencyStore.clean();
   }, []);
 
+  const canvasWidth = useMemo(() => {
+    const { width, marginRight } = numericStyles;
+    // specify with based on origin and received elements
+    return (width + marginRight) * (latencyStore.expectedSubscribePromises + 1);
+  }, [latencyStore.expectedSubscribePromises]);
+
   return (
-    <LatencyWrapper id="pageToCapture">
+    <LatencyWrapper id="pageToCapture" width={canvasWidth}>
 
       <QRCode
         id="qrcode"

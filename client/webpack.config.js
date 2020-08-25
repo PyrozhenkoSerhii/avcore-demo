@@ -3,6 +3,7 @@ const webpack = require("webpack");
 const Dotenv = require("dotenv-webpack");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const { CleanWebpackPlugin } = require("clean-webpack-plugin");
+const path = require("path");
 
 module.exports = {
   target: "web",
@@ -10,6 +11,11 @@ module.exports = {
     extensions: [".tsx", ".ts", ".jsx", ".js", ".json"],
   },
   entry: "./index.tsx",
+  output: {
+    path: path.resolve(__dirname, "dist"),
+    filename: "bundle.js",
+    publicPath: "/build/",
+  },
   devtool: "source-map",
   module: {
     rules: [
