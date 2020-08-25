@@ -9,7 +9,7 @@ import { API_OPERATION, MediasoupSocketApi, MIXER_PIPE_TYPE } from "avcore";
 import { conferenceConfig, mixerPipeFormats, mixerOptions } from "../config/stream";
 
 class SocketService {
-  @observable publishDisabled = false;
+  @observable publishDisabled = true;
 
   @observable listenRTCDisabled = true;
 
@@ -31,8 +31,6 @@ class SocketService {
 
   @observable hlsAvailable = false;
 
-  @observable error: string = null;
-
   @observable conferenceConfig = conferenceConfig;
 
   @observable capture = null;
@@ -46,8 +44,9 @@ class SocketService {
   async init() {
     try {
       this.mediaStream = await Utils.getUserMedia({ video: true, audio: true });
+      this.publishDisabled = false;
     } catch (err) {
-      this.error = err;
+      console.log("Error occured while requesting user media: ", err);
     }
   }
 
@@ -75,17 +74,18 @@ class SocketService {
           this.streamId = streamId;
           this.capture = capture;
 
-          this.publishDisabled = false;
           this.listenHLSDisabled = false;
           this.listenRTCDisabled = false;
         });
       } catch (err) {
-        this.error = err.response;
+        console.log("Error occured while publishing stream: ", err);
+      } finally {
+        this.publishDisabled = false;
       }
     }
   }
 
-  @action stopPublishing = async () => {
+  @action stopPublishing = async (reinitMedia = true) => {
     this.publishDisabled = true;
 
     if (this.playback) {
@@ -96,9 +96,18 @@ class SocketService {
       this.stopListeningHLS();
     }
 
-    this.capture.close();
+    if (this.capture) {
+      this.capture.close();
+    }
+
     this.streamId = null;
-    this.mediaStream = await Utils.getUserMedia({ video: true, audio: true });
+    if (reinitMedia) {
+      try {
+        this.mediaStream = await Utils.getUserMedia({ video: true, audio: true });
+      } catch (err) {
+        console.log("Error occured while requesting user media: ", err);
+      }
+    }
 
     this.publishDisabled = false;
     this.listenHLSDisabled = true;
@@ -117,10 +126,10 @@ class SocketService {
 
         this.incommingStream = await playback.subscribe();
         this.playback = playback;
-        this.listenRTCDisabled = false;
       });
     } catch (err) {
-      this.error = err.response;
+      console.log("Error occured while subscribing to WebRTC stream: ", err);
+    } finally {
       this.listenRTCDisabled = false;
     }
   }
@@ -137,7 +146,6 @@ class SocketService {
       this.listenHLSDisabled = false;
     } catch (err) {
       if (err.response.status === 404) {
-        // eslint-disable-next-line no-console
         console.log("Hls video not available. Retring in 1 second");
         this.hlsUrlRetryTimer = setTimeout(() => {
           this.checkUrl(url);
@@ -197,8 +205,9 @@ class SocketService {
         this.hlsUrl = url;
         this.mixerId = mixerId;
       } catch (err) {
-        this.error = err.response;
-        this.listenRTCDisabled = false;
+        console.log("Error occured while subscribing to HLS stream: ", err);
+      } finally {
+        this.listenHLSDisabled = false;
       }
     });
   }
@@ -225,8 +234,17 @@ class SocketService {
       }
     });
   }
+
+  @action close = () => {
+    this.stopPublishing(false);
+    if (this.mediaStream) {
+      this.mediaStream.getTracks().forEach((track) => {
+        track.stop();
+      });
+    }
+  }
 }
 
 const service = new SocketService();
-service.init();
+
 export const socketService = createContext(service);

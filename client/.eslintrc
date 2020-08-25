@@ -41,6 +41,7 @@
     "react/jsx-props-no-spreading": "off",
     "no-underscore-dangle": "off",
     "jsx-a11y/media-has-caption": "off",
-    "no-param-reassign": "off"
+    "no-param-reassign": "off",
+    "no-console": "off"
   }
 }

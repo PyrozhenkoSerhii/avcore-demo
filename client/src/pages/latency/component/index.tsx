@@ -35,7 +35,7 @@ export const LatencyComponent = observer(() => {
 
   const canvasWidth = useMemo(() => {
     const { width, marginRight } = numericStyles;
-    // specify with based on origin and received elements
+    // define canvas width based on the origin and received elements width and their number
     return (width + marginRight) * (latencyStore.expectedSubscribePromises + 1);
   }, [latencyStore.expectedSubscribePromises]);
 

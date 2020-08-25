@@ -29,6 +29,8 @@ interface ISubscribedStreamWithPromise extends ISubscribedStream {
   streamPromise: Promise<MediaStream>;
 }
 
+// Sample url to test two servers with two workers each
+// http://app.avcore.io/latency?server=https://node99.meshub.tv&worker=0&worker1=1
 class LatencyService {
   @observable servers: Array<string> = ["https://rpc.codeda.com"];
 
@@ -78,32 +80,36 @@ class LatencyService {
     this.updated = true;
   }
 
-  @action publishCanvas = async (mediaStream: MediaStream) => {
+  @action publishCanvas = (mediaStream: MediaStream) => {
     const streamId = shortId.generate();
     const publishingServer = this.servers[0];
     const publishingWorker = this.workers[0];
 
     this.socket.emit("auth", { stream: streamId, operation: API_OPERATION.PUBLISH }, async (token: string) => {
-      const capture = new ConferenceApi({
-        kinds: this.kinds,
-        url: publishingServer,
-        worker: publishingWorker,
-        stream: streamId,
-        token,
-      });
+      try {
+        const capture = new ConferenceApi({
+          kinds: this.kinds,
+          url: publishingServer,
+          worker: publishingWorker,
+          stream: streamId,
+          token,
+        });
 
-      await capture.publish(mediaStream);
+        await capture.publish(mediaStream);
 
-      const published: IPublishedStream = {
-        streamId,
-        server: publishingServer,
-        capture,
-        worker: publishingWorker,
-      };
+        const published: IPublishedStream = {
+          streamId,
+          server: publishingServer,
+          capture,
+          worker: publishingWorker,
+        };
 
-      this.listenStream(published);
+        this.listenStream(published);
 
-      this.publishedStream = published;
+        this.publishedStream = published;
+      } catch (err) {
+        console.log("Error occured while publishing stream: ", err);
+      }
     });
   }
 
@@ -164,17 +170,21 @@ class LatencyService {
     data: Array<ISubscribedStreamWithPromise>,
     promises: Array<Promise<MediaStream>>,
   ) => {
-    const streams = await Promise.all(promises);
+    try {
+      const streams = await Promise.all(promises);
 
-    const subscribedStreams = streams.map<ISubscribedStreamWithMedia>((stream, index) => ({
-      server: data[index].server,
-      streamId: data[index].streamId,
-      playback: data[index].playback,
-      stream,
-      worker: data[index].worker,
-    }));
+      const subscribedStreams = streams.map<ISubscribedStreamWithMedia>((stream, index) => ({
+        server: data[index].server,
+        streamId: data[index].streamId,
+        playback: data[index].playback,
+        stream,
+        worker: data[index].worker,
+      }));
 
-    this.subscribedStreams = subscribedStreams;
+      this.subscribedStreams = subscribedStreams;
+    } catch (err) {
+      console.log("Error occured while resolving promises from subscribed streams: ", err);
+    }
   }
 
   @action setPlayerActive = () => {
@@ -183,6 +193,3 @@ class LatencyService {
 }
 
 export const latencyService = createContext(new LatencyService());
-
-// Sample url to test two servers with two workers each
-// http://localhost:4000/latency?server=https://node99.meshub.tv&worker=0&worker1=1

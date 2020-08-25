@@ -17,6 +17,13 @@ const { useContext, useEffect } = React;
 
 export const DemoPage = observer(():JSX.Element => {
   const socketStore = useContext(socketService);
+
+  useEffect(() => {
+    socketStore.init();
+
+    return () => socketStore.close();
+  }, []);
+
   const location = useLocation();
 
   const params = new URLSearchParams(location.search);
