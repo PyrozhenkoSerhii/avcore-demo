@@ -11,11 +11,6 @@ module.exports = {
     extensions: [".tsx", ".ts", ".jsx", ".js", ".json"],
   },
   entry: "./index.tsx",
-  output: {
-    path: path.resolve(__dirname, "dist"),
-    filename: "bundle.js",
-    publicPath: "/build/",
-  },
   devtool: "source-map",
   module: {
     rules: [
