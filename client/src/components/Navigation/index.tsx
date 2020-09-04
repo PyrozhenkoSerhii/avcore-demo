@@ -9,7 +9,7 @@ export const NavigationComponent = (): JSX.Element => {
   return (
     <NavigationWrapper>
       <Link to="/demo">
-        <Text bold={pathname.includes("demo")}>AVCore Demo</Text>
+        <Text bold={pathname.includes("demo")}>MeshStream Demo</Text>
       </Link>
       <Link to="/latency">
         <Text bold={pathname.includes("latency")}>Latency test</Text>

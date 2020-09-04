@@ -39,7 +39,7 @@ export const DemoPage = observer(():JSX.Element => {
     <Content>
       <ContentColumn>
         <ColumnInfo>
-          <InfoHeader>Publish your stream to the AVCore server</InfoHeader>
+          <InfoHeader>Publish your stream to the MeshStream server</InfoHeader>
         </ColumnInfo>
 
         <ColumnController>
